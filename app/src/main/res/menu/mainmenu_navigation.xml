@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_furniture"
+        android:icon="@drawable/ic_room"
+        android:enabled="true"
+        android:checked="true"
+        android:title="Room"    />
+    <item
+        android:id="@+id/nav_refrigerator"
+        android:icon="@drawable/ic_food"
+        android:enabled="true"
+        android:title="Fridge"  />
+    <item
+        android:id="@+id/nav_information"
+        android:icon="@drawable/ic_info"
+        android:enabled="true"
+        android:title="Info"/>
+</menu>

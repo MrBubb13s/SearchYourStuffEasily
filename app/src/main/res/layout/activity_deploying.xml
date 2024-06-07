@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/TopLinear"
+        android:layout_width="match_parent"
+        android:layout_height="170dp"
+        android:layout_weight="1"
+        android:background="@color/black"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent">
+
+        <ImageButton
+            android:id="@+id/Image1"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:src="@drawable/drawers"
+            />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/BottomLinear"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="@color/white"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/TopLinear">
+
+        <TextView
+            android:id="@+id/dropText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="여기에 이미지 드랍" />
+    </LinearLayout>
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

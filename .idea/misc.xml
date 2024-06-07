@@ -1,0 +1,19 @@
+<project version="4">
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="..\:/SearchYourStuffEasily/app/src/main/res/layout/activity_deploying.xml" value="0.18333333333333332" />
+        <entry key="..\:/SearchYourStuffEasily/app/src/main/res/layout/activity_drawing.xml" value="0.18333333333333332" />
+        <entry key="..\:/SearchYourStuffEasily/app/src/main/res/layout/activity_main.xml" value="0.27898550724637683" />
+        <entry key="..\:/SearchYourStuffEasily/app/src/main/res/layout/activity_upload_image.xml" value="0.3283514492753623" />
+      </map>
+    </option>
+  </component>
+  <component name="ExternalStorageConfigurationManager" enabled="true" />
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_17" default="true" project-jdk-name="jbr-17" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/build/classes" />
+  </component>
+  <component name="ProjectType">
+    <option name="id" value="Android" />
+  </component>
+</project>

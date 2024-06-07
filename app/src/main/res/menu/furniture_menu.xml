@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/menu"
+        android:title="가구 변경"
+        android:icon="@drawable/ic_draw"
+        app:showAsAction="always">
+        <menu>
+            <item
+                android:id="@+id/menu_drawer"
+                android:title="Drawer"
+                android:icon="@drawable/drawers"/>
+            <item
+                android:id="@+id/menu_closet"
+                android:title="Closet"
+                android:icon="@drawable/closet"/>
+            <item
+                android:id="@+id/menu_bed"
+                android:title="Bed"
+                android:icon="@drawable/bed"/>
+            <item
+                android:id="@+id/menu_shelf"
+                android:title="Shelf"
+                android:icon="@drawable/shelf"/>
+            <item
+                android:id="@+id/menu_bookshelf"
+                android:title="Bookshelf"
+                android:icon="@drawable/bookshelf"/>
+            <item
+                android:id="@+id/menu_cabinet"
+                android:title="Cabinet"
+                android:icon="@drawable/small_cabinet"/>
+            <item
+                android:id="@+id/menu_cupboard"
+                android:title="Cupboard"
+                android:icon="@drawable/cupboard"/>
+            <item
+                android:id="@+id/menu_television"
+                android:title="Television"
+                android:icon="@drawable/television"/>
+            <item
+                android:id="@+id/menu_wardrobe"
+                android:title="Wardrobe"
+                android:icon="@drawable/wardrobe"/>
+            <item
+                android:id="@+id/menu_dressing"
+                android:title="Dressing"
+                android:icon="@drawable/dressing_table"/>
+            <item
+                android:id="@+id/menu_glass"
+                android:title="Glass"
+                android:icon="@drawable/glass_cabinet"/>
+            <item
+                android:id="@+id/menu_desk"
+                android:title="Desk"
+                android:icon="@drawable/desk"/>
+        </menu>
+    </item>
+
+    <item
+        android:id="@+id/action_delete_room"
+        android:icon="@drawable/ic_baseline_restore_from_trash_24"
+        android:title="삭제"
+        app:showAsAction="ifRoom" />
+</menu>
