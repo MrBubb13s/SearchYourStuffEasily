@@ -12,7 +12,8 @@
         android:layout_gravity="center"
         android:gravity="center"
         android:background="@drawable/rounded_corner_white"
-        android:padding="40dp">
+        android:padding="40dp"
+        android:scrollbars="vertical">
 
         <FrameLayout
             android:layout_width="250dp"

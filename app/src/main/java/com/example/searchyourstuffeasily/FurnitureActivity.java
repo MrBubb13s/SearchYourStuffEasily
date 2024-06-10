@@ -48,10 +48,6 @@ public class FurnitureActivity extends AppCompatActivity {
     private static final int REQUEST_IMAGE_CAPTURE = 2;
     private StorageReference storageReference;
     private ImageView imageViewFurniture;
-    private Button buttonUploadFurniture;
-    private Button buttonCameraFurniture;
-    private String familyId, roomId;
-    private View dialogView;
     Furniture furniture;
     String furnitureId;
     DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
@@ -63,10 +59,11 @@ public class FurnitureActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_furniture);
         getSupportActionBar().setTitle("Room");
+
         Intent intent = getIntent();
         String familyId = intent.getStringExtra("familyId");
         String roomId = intent.getStringExtra("roomId");
-        String furnitureId = intent.getStringExtra("furnitureId");
+        furnitureId = intent.getStringExtra("furnitureId");
 
         Log.d("FurnitureActivity", "familyId: " + familyId);
         Log.d("FurnitureActivity", "roomId: " + roomId);
@@ -82,14 +79,15 @@ public class FurnitureActivity extends AppCompatActivity {
 
         dialog01 = new Dialog(FurnitureActivity.this);
         dialog01.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog01.setContentView(R.layout.dialog_search_result);
+        dialog01.setContentView(R.layout.dialog_confirm_delete);
 
         dialog02 = new Dialog(FurnitureActivity.this);
         dialog02.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog02.setContentView(R.layout.dialog_register_product);
 
         LayoutInflater inflater = getLayoutInflater();
-        dialogView = inflater.inflate(R.layout.dialog_add_item, null);
+        View dialogView = inflater.inflate(R.layout.dialog_add_item, null);
+        //dialogView는 사용처가 없으나 inflater의 설정을 변경하는 내용이 있어 임시로 유지함. 설정 변경이 불필요한 경우 dialogView는 삭제하고, layout의 dialog_add_item.xml도 삭제할 것(일자:24/06/10)
 
         Intent refnameIntent = getIntent();
         String furnitureName = refnameIntent.getStringExtra("furnitureName");
@@ -181,56 +179,60 @@ public class FurnitureActivity extends AppCompatActivity {
         EditText positionInput = dialog02.findViewById(R.id.infoInput2);
         EditText countInput = dialog02.findViewById(R.id.countInput2);
 
-        Button Btn_Register = dialog02.findViewById(R.id.ActiveButton2);
-        Button Btn_Cancel = dialog02.findViewById(R.id.CloseButton2);
-        Btn_Register.setText("추가");
-        Btn_Cancel.setText("취소");
-
         imageViewFurniture = dialog02.findViewById(R.id.imageViewFurniture);
-        buttonUploadFurniture = dialog02.findViewById(R.id.buttonUpload);
-        buttonCameraFurniture = dialog02.findViewById(R.id.buttonCamera);
-        buttonUploadFurniture.setOnClickListener(new View.OnClickListener() {
+        storageReference = FirebaseStorage.getInstance().getReference();
+
+        Button Btn_Register = dialog02.findViewById(R.id.ActiveButton2);
+        Button Btn_Close = dialog02.findViewById(R.id.CloseButton2);
+        Button Btn_Upload = dialog02.findViewById(R.id.buttonUpload);
+        Button Btn_Camera = dialog02.findViewById(R.id.buttonCamera);
+        Btn_Register.setText("추가");
+        Btn_Close.setText("취소");
+
+        Btn_Upload.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
                 startActivityForResult(intent, REQUEST_IMAGE_PICK);
             }
         });
-        buttonCameraFurniture.setOnClickListener(new View.OnClickListener() {
+        Btn_Camera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                if (intent.resolveActivity(getPackageManager()) != null) {
+                if (intent.resolveActivity(getPackageManager()) != null)
                     startActivityForResult(intent, REQUEST_IMAGE_CAPTURE);
-                }
             }
         });
 
-        storageReference = FirebaseStorage.getInstance().getReference();
         Btn_Register.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String itemName = nameInput.getText().toString().trim();
                 String itemPosition = positionInput.getText().toString().trim();
                 String countText = countInput.getText().toString().trim();
+                int itemCount;
 
                 if (itemName.isEmpty()) {
                     Toast.makeText(FurnitureActivity.this, "물건 이름을 입력해주세요.", Toast.LENGTH_SHORT).show();
                     return;
                 }
-
                 if (itemPosition.isEmpty()) {
                     Toast.makeText(FurnitureActivity.this, "세부 장소를 입력해주세요.", Toast.LENGTH_SHORT).show();
                     return;
                 }
-
-                int itemCount;
-                try {
+                if (countText.isEmpty()) {
+                    Toast.makeText(FurnitureActivity.this, "수량을 입력해주세요.", Toast.LENGTH_SHORT).show();
+                    return;
+                } else {
+                    try {
                     itemCount = Integer.parseInt(countText);
                 } catch (NumberFormatException e) {
                     Toast.makeText(FurnitureActivity.this, "수량은 숫자로 입력해주세요.", Toast.LENGTH_SHORT).show();
                     return;
                 }
+                }
+
                 DatabaseReference itemRef = itemsRef.push();
                 Map<String, Object> itemMap = new HashMap<>();
                 itemMap.put("name", itemName);
@@ -250,11 +252,10 @@ public class FurnitureActivity extends AppCompatActivity {
                                 Toast.makeText(FurnitureActivity.this, "물건 추가에 실패했습니다.", Toast.LENGTH_SHORT).show();
                             }
                         });
-
                 dialog02.dismiss();
             }
         });
-        Btn_Cancel.setOnClickListener(new View.OnClickListener() {
+        Btn_Close.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 dialog02.dismiss();
@@ -264,14 +265,13 @@ public class FurnitureActivity extends AppCompatActivity {
 
     public void showDialogDelete() {
         dialog01.show();
-        TextView TextSearchResult = dialog01.findViewById(R.id.SearchResultText);
-        Button btn_Search = dialog01.findViewById(R.id.SearchResultButton);
+        TextView Txt_Result = dialog01.findViewById(R.id.Confirm_Del_Text);
+        Button Btn_Search = dialog01.findViewById(R.id.Confirm_Del_Button);
 
-        TextSearchResult.setTextSize(20);
-        TextSearchResult.setText("해당 가구를 삭제하시겠습니까?");
-        btn_Search.setText("삭제");
+        Txt_Result.setTextSize(20);
+        Txt_Result.setText("해당 가구를 삭제하시겠습니까?");
 
-        btn_Search.setOnClickListener(new View.OnClickListener() {
+        Btn_Search.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 itemsRef.removeValue();
@@ -289,7 +289,6 @@ public class FurnitureActivity extends AppCompatActivity {
                                 Toast.makeText(FurnitureActivity.this, "가구 삭제에 실패했습니다.", Toast.LENGTH_SHORT).show();
                             }
                         });
-
                 dialog01.dismiss();
             }
         });
@@ -340,11 +339,9 @@ public class FurnitureActivity extends AppCompatActivity {
                                 Toast.makeText(FurnitureActivity.this, "물건 정보 변경에 실패했습니다.", Toast.LENGTH_SHORT).show();
                             }
                         });
-
                 dialog02.dismiss();
             }
         });
-
         Btn_Delete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -361,7 +358,6 @@ public class FurnitureActivity extends AppCompatActivity {
                                 Toast.makeText(FurnitureActivity.this, "물건 삭제에 실패했습니다.", Toast.LENGTH_SHORT).show();
                             }
                         });
-
                 dialog02.dismiss();
             }
         });

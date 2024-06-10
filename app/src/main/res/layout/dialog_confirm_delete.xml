@@ -11,21 +11,30 @@
         android:gravity="center"
         android:orientation="vertical"
         android:padding="40dp"
-        android:background="@drawable/rounded_corner_white"
+        android:background="@drawable/rounded_corner_blue"
         android:id="@+id/linearlayout">
 
-        <AutoCompleteTextView
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="이름                                    "
-            android:completionThreshold="1"
-            android:id="@+id/AutoCompTV"
-            android:dropDownSelector="@color/colorIntro"/>
+            android:textSize="30sp"
+            android:id="@+id/Confirm_Del_Text"
+            android:gravity="center"/>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
+
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:id="@+id/Confirm_Del_Button"
+                android:text="확인"
+                android:textColor="@color/colorIntro"
+                style="@style/Widget.AppCompat.Button.Borderless"/>
+
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>

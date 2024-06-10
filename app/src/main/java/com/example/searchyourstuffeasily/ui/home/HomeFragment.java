@@ -27,7 +27,6 @@ import com.example.searchyourstuffeasily.FurnitureActivity;
 import com.example.searchyourstuffeasily.R;
 import com.example.searchyourstuffeasily.Room;
 import com.example.searchyourstuffeasily.RoomActivity;
-import com.example.searchyourstuffeasily.ui.home.RoomButtonAdapter;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
@@ -244,23 +243,22 @@ public class HomeFragment extends Fragment {
         public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
             LayoutInflater inflater = requireActivity().getLayoutInflater();
-            View view = inflater.inflate(R.layout.dialog_search_real, null);
+            View view = inflater.inflate(R.layout.dialog_search, null);
             builder.setView(view);
 
             searchView = view.findViewById(R.id.searchView);
-            searchResultListView = view.findViewById(R.id.searchResultListView);
+            searchResultListView = view.findViewById(R.id.searchListView);
 
             searchResultAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1);
             searchResultListView.setAdapter(searchResultAdapter);
 
             itemList = getAllItemNames();
             searchView.setOnQueryTextListener(this);
-
             searchResultListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     String selectedItem = (String) parent.getItemAtPosition(position);
-                    openItemModifyDialog(selectedItem);
+                    openFurnitureActivity(selectedItem);
                 }
             });
 
@@ -298,16 +296,16 @@ public class HomeFragment extends Fragment {
             return itemNames;
         }
 
-        private void openItemModifyDialog(String itemName) {
+        private void openFurnitureActivity(String itemName) {
             DatabaseReference itemsRef = FirebaseDatabase.getInstance().getReference().child("homes").child(familyId).child("rooms");
             itemsRef.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     for (DataSnapshot roomSnapshot : snapshot.getChildren()) {
-                        DataSnapshot furnituresSnapshot = roomSnapshot.child("furnitures");
-                        for (DataSnapshot furnitureSnapshot : furnituresSnapshot.getChildren()) {
-                            DataSnapshot itemsSnapshot = furnitureSnapshot.child("items");
-                            for (DataSnapshot itemSnapshot : itemsSnapshot.getChildren()) {
+                        DataSnapshot fSnapshot = roomSnapshot.child("furnitures");
+                        for (DataSnapshot furnitureSnapshot : fSnapshot.getChildren()) {
+                            DataSnapshot iSnapshot = furnitureSnapshot.child("items");
+                            for (DataSnapshot itemSnapshot : iSnapshot.getChildren()) {
                                 String currentItemName = itemSnapshot.child("name").getValue(String.class);
                                 if (currentItemName != null && currentItemName.equals(itemName)) {
                                     String itemId = itemSnapshot.getKey();

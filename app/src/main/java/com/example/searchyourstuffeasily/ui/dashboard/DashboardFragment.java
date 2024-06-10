@@ -14,8 +14,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -32,8 +30,6 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.example.searchyourstuffeasily.FoodActivity;
 import com.example.searchyourstuffeasily.R;
 import com.example.searchyourstuffeasily.GlobalVariable;
-import com.example.searchyourstuffeasily.RoomActivity;
-import com.example.searchyourstuffeasily.ui.home.DialogFragment;
 import com.example.searchyourstuffeasily.ui.home.RoomButtonAdapter;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -75,11 +71,11 @@ public class DashboardFragment extends Fragment {
 
         dialog02 = new Dialog(getActivity());
         dialog02.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog02.setContentView(R.layout.dialog_search_result);
+        dialog02.setContentView(R.layout.dialog_confirm_delete);
 
         dialog03 = new Dialog(getActivity());
         dialog03.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog03.setContentView(R.layout.dialog_search);
+        dialog03.setContentView(R.layout.dialog_all_purpose);
 
         familyData = (GlobalVariable) getActivity().getApplicationContext();
         userId = familyData.getuId();
@@ -136,7 +132,6 @@ public class DashboardFragment extends Fragment {
 
             }
         });
-
         return root;
     }
     private BroadcastReceiver fridgeDeletedReceiver = new BroadcastReceiver() {
@@ -177,6 +172,7 @@ public class DashboardFragment extends Fragment {
         }
         return null;
     }
+
     private void attachDatabaseReadListener() {
         conditionRef.addChildEventListener(new ChildEventListener() {
             @Override
@@ -211,9 +207,11 @@ public class DashboardFragment extends Fragment {
             }
         });
     }
+
     private void removeFromListView(String fridgeName) {
         roomButtonAdapter.remove(fridgeName);
     }
+
     private void addToListView(String fridgeName) {
         roomButtonAdapter.add(fridgeName);
     }
@@ -237,12 +235,7 @@ public class DashboardFragment extends Fragment {
         EditText et_SearchName = dialog01.findViewById(R.id.EditTextInput1);
 
         Button Btn_Register = dialog01.findViewById(R.id.ActiveButton1);
-        if (Btn_Register == null)
-            Log.e("DashboardFragment", "searchButton is null");
-
         Button Btn_Close = dialog01.findViewById(R.id.CloseButton1);
-        if (Btn_Close == null)
-            Log.e("DashboardFragment", "closeButton is null");
 
         Btn_Register.setText("추가");
         Btn_Register.setOnClickListener(new View.OnClickListener() {
@@ -290,8 +283,8 @@ public class DashboardFragment extends Fragment {
         dialog03.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         dialog03.show();
 
-        EditText et_Name = dialog03.findViewById(R.id.edit_search);
-        Button Btn_Change = dialog03.findViewById(R.id.button_search);
+        EditText et_Name = dialog03.findViewById(R.id.editText_all_purpose);
+        Button Btn_Change = dialog03.findViewById(R.id.button_all_purpose);
         Button Btn_Close = dialog03.findViewById(R.id.button_cancel);
 
         Btn_Change.setText("변경");
@@ -318,13 +311,12 @@ public class DashboardFragment extends Fragment {
         dialog02.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         dialog02.show();
 
-        TextView textView = dialog02.findViewById(R.id.SearchResultText);
-        Button Btn_Delete = dialog02.findViewById(R.id.SearchResultButton);
+        TextView textView = dialog02.findViewById(R.id.Confirm_Del_Text);
+        Button Btn_Delete = dialog02.findViewById(R.id.Confirm_Del_Button);
 
         textView.setText(category + "와\n" + category + "안의 목록을 정말 삭제하시겠습니까? ");
         textView.setTextSize(20);
 
-        Btn_Delete.setText("네");
         Btn_Delete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

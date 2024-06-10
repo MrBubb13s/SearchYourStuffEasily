@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -7,10 +6,10 @@
     android:padding="16dp">
 
     <EditText
-        android:id="@+id/edit_furniture_name"
+        android:id="@+id/editText_all_purpose"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="가구 이름 입력"
+        android:hint="검색어 입력"
         android:inputType="text"
         android:maxLines="1"
         android:singleLine="true" />
@@ -23,16 +22,16 @@
         android:layout_marginTop="16dp">
 
         <Button
-            android:id="@+id/CloseButton1"
+            android:id="@+id/button_cancel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="취소" />
 
         <Button
-            android:id="@+id/ActiveButton1"
+            android:id="@+id/button_all_purpose"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="추가"
+            android:text="검색"
             android:layout_marginStart="8dp" />
     </LinearLayout>
 </LinearLayout>

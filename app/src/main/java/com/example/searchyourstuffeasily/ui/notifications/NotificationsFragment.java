@@ -15,7 +15,6 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -36,9 +35,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import static android.content.Context.CLIPBOARD_SERVICE;
 
 public class NotificationsFragment extends Fragment {
@@ -49,7 +45,6 @@ public class NotificationsFragment extends Fragment {
     private Dialog dialog01;
     private String uid, familyId;
     DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
-    DatabaseReference conditionRef;
     GlobalVariable familyData;
 
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -69,7 +64,7 @@ public class NotificationsFragment extends Fragment {
 
         dialog01 = new Dialog(getActivity());
         dialog01.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog01.setContentView(R.layout.dialog_search);
+        dialog01.setContentView(R.layout.dialog_all_purpose);
 
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
@@ -110,15 +105,13 @@ public class NotificationsFragment extends Fragment {
 
                 }
 
-
                 @Override
                 public void onCancelled(@NonNull DatabaseError error) {
                     // 데이터베이스 에러 처리
                 }
             });
-        } else {
+        } else
             Log.e("NotificationsFragment", "User is not logged in");  // 사용자가 로그인하지 않은 경우 처리할 로직 작성
-        }
 
         Btn_PartIn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -172,13 +165,13 @@ public class NotificationsFragment extends Fragment {
     }
 
     public void showDialogPartIn() {
-        Button Btn_Search = dialog01.findViewById(R.id.button_search);
+        Button Btn_Search = dialog01.findViewById(R.id.button_all_purpose);
         Button Btn_Cancel = dialog01.findViewById(R.id.button_cancel);
         Btn_Search.setText("참여");
 
         dialog01.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         dialog01.show();
-        EditText et_SearchName = dialog01.findViewById(R.id.edit_search);
+        EditText et_SearchName = dialog01.findViewById(R.id.editText_all_purpose);
 
         Btn_Search.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -237,13 +230,13 @@ public class NotificationsFragment extends Fragment {
         return true; // 임시로 true 반환
     }
 
-
     private void showNoFamilyCodeDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setMessage("현재 가족 코드가 없습니다. 가족 참여 후에 코드를 복사할 수 있습니다.")
                 .setPositiveButton("확인", null);
         builder.create().show();
     }
+
     private void showInvalidFamilyCodeDialog() {
         // 유효하지 않은 가족 코드 입력 시 보여줄 대화상자 구현
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
@@ -251,6 +244,7 @@ public class NotificationsFragment extends Fragment {
                 .setPositiveButton("확인", null);
         builder.create().show();
     }
+
     private void openRevokeFrag() {
         RevokeFragment rvk = new RevokeFragment();
         rvk.setTargetFragment(this, 0);
@@ -272,12 +266,10 @@ public class NotificationsFragment extends Fragment {
                             fc.setFamilyCode(familyCode);
                             fc.setTargetFragment(NotificationsFragment.this, 0);
                             fc.show(getFragmentManager(), "familyCode");
-                        } else {
+                        } else
                             showNoFamilyCodeDialog();
-                        }
-                    } else {
+                    } else
                         showNoFamilyCodeDialog();
-                    }
                 }
 
                 @Override

@@ -31,7 +31,5 @@
             android:layout_height="wrap_content"
             android:text="참여"
             android:layout_marginStart="8dp"/>
-
     </LinearLayout>
-
 </LinearLayout>

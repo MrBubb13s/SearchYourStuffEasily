@@ -31,7 +31,6 @@ import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
@@ -63,11 +62,10 @@ public class FoodActivity extends AppCompatActivity {
     Button dateset;
     DatePickerDialog datePickerDialog;
     Refrigerator Fridge;
-    private String fridgeId, date;
+    private String fridgeId;
     private DatabaseReference fridgeRef;
     private List<Food> foodList;
     private ArrayAdapter<String> listViewAdapter;
-    private ListView listView;
     private static final int REQUEST_IMAGE_PICK = 1;
     private static final int REQUEST_IMAGE_CAPTURE = 2;
     private static final int REQUEST_IMAGE_PICK_FOOD = 3;
@@ -91,25 +89,28 @@ public class FoodActivity extends AppCompatActivity {
         dialog01.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog01.setContentView(R.layout.dialog_register_food);
 
-        imageViewFood = dialog01.findViewById(R.id.imageViewFood);
-        Button btn_UploadFood = dialog01.findViewById(R.id.buttonUploadFood);
-        Button btn_CameraFood = dialog01.findViewById(R.id.buttonCameraFood);
-
         fridgeRef = FirebaseDatabase.getInstance().getReference().child("HomeDB").child(familyId).child("fridgeList").child(fridgeId);
         foodList = new ArrayList<>();
 
-        listView = findViewById(R.id.FoodListView);
+        storageReference = FirebaseStorage.getInstance().getReference();
+
+        ListView listView = findViewById(R.id.FoodListView);
         listViewAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
         listView.setAdapter(listViewAdapter);
-        btn_UploadFood.setOnClickListener(new View.OnClickListener() {
+
+        //dialog상의 내용을 onCreate에서 먼저 처리함.
+        imageViewFood = dialog01.findViewById(R.id.imageViewFood);
+        Button Btn_Register = dialog01.findViewById(R.id.buttonUploadFood);
+        Button Btn_Camera = dialog01.findViewById(R.id.buttonCameraFood);
+
+        Btn_Register.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
                 startActivityForResult(intent, REQUEST_IMAGE_PICK_FOOD);
             }
         });
-
-        btn_CameraFood.setOnClickListener(new View.OnClickListener() {
+        Btn_Camera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -118,15 +119,13 @@ public class FoodActivity extends AppCompatActivity {
                 }
             }
         });
-        storageReference = FirebaseStorage.getInstance().getReference();
 
         findViewById(R.id.AddFoodButton).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showDialogAddFood();
+                showDialogRegister();
             }
         });
-
         listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
@@ -134,7 +133,6 @@ public class FoodActivity extends AppCompatActivity {
                 return true;
             }
         });
-
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -196,30 +194,8 @@ public class FoodActivity extends AppCompatActivity {
             }
         });
     }
-
-    private void showDialogAddFood() {
-        showDialogRegister();
-    }
-
-    //리팩토링 후 사용처 없음 확인 후 삭제 필요.(일자:24/06/05)
-    private void showDialogFood(@NonNull Food food) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        View view = getLayoutInflater().inflate(R.layout.dialog_food, null);
-        builder.setView(view);
-
-        TextView textViewName = view.findViewById(R.id.textViewName);
-        TextView textViewQuantity = view.findViewById(R.id.textViewQuantity);
-        TextView textViewExpirationDate = view.findViewById(R.id.textViewExpirationDate);
-
-        textViewName.setText(food.getName());
-        textViewQuantity.setText("수량: " + food.getCount());
-        textViewExpirationDate.setText("유통기한: " + food.getExpirationDate());
-
-        builder.setPositiveButton("확인", null);
-
-        AlertDialog dialog = builder.create();
-        dialog.show();
-    }
+    //showDialogAddFood는 바로 DialogRegister을 호출하는 것으로 대체하여 삭제함.
+    //showDialogFood는 리스트뷰에 표현된 음식이 터치되었을 때 DialogAdjustByIndex가 켜지는 것으로 대체되어 삭제함.(일자:24/06/10)
 
     private void showDialogDeleteFridge() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -237,11 +213,11 @@ public class FoodActivity extends AppCompatActivity {
 
     private void showDialogSearch() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        View view = getLayoutInflater().inflate(R.layout.dialog_search, null);
+        View view = getLayoutInflater().inflate(R.layout.dialog_all_purpose, null);
         builder.setView(view);
 
-        final EditText edit_Search = view.findViewById(R.id.edit_search);
-        Button Btn_Search = view.findViewById(R.id.button_search);
+        final EditText edit_Search = view.findViewById(R.id.editText_all_purpose);
+        Button Btn_Search = view.findViewById(R.id.button_all_purpose);
         Button Btn_Close = view.findViewById(R.id.button_cancel);
 
         final AlertDialog dialog = builder.create();
@@ -291,21 +267,17 @@ public class FoodActivity extends AppCompatActivity {
                 String foodName = nameInput.getText().toString().trim();
                 String foodPosInfo = posInput.getText().toString().trim();
                 String countInputStr = countInput.getText().toString().trim();
-                // 이름 입력 체크
-                if (foodName.isEmpty()) {
+                int count;
+
+                if (foodName.isEmpty()) {                   // 이름 입력 체크
                     Toast.makeText(FoodActivity.this, "음식 이름을 입력해주세요.", Toast.LENGTH_SHORT).show();
                     return;
                 }
-
-                // 상세정보 입력 체크
-                if (foodPosInfo.isEmpty()) {
-                    Toast.makeText(FoodActivity.this, "상세정보를 입력해주세요.", Toast.LENGTH_SHORT).show();
+                if (foodPosInfo.isEmpty()) {                // 상세정보 입력 체크
+                    Toast.makeText(FoodActivity.this, "상세 정보를 입력해주세요.", Toast.LENGTH_SHORT).show();
                     return;
                 }
-
-                // 수량 입력 체크
-                int count;
-                if (countInputStr.isEmpty()) {
+                if (countInputStr.isEmpty()) {              // 수량 입력 체크
                     Toast.makeText(FoodActivity.this, "수량을 입력해주세요.", Toast.LENGTH_SHORT).show();
                     return;
                 } else {
@@ -316,7 +288,6 @@ public class FoodActivity extends AppCompatActivity {
                         return;
                     }
                 }
-
 
                 String expirationDate = dateset.getText().toString();
 
@@ -331,9 +302,9 @@ public class FoodActivity extends AppCompatActivity {
                 fridgeRef.child("foodList").orderByChild("name").equalTo(foodName).addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        if (snapshot.exists()) {
+                        if (snapshot.exists())
                             Toast.makeText(FoodActivity.this, "이미 존재하는 음식입니다.", Toast.LENGTH_SHORT).show();
-                        } else {
+                        else {
                             fridgeRef.child("foodList").child(food.getId()).setValue(foodData)
                                     .addOnSuccessListener(new OnSuccessListener<Void>() {
                                         @Override
@@ -361,7 +332,12 @@ public class FoodActivity extends AppCompatActivity {
                         Log.e("Firebase", "음식 중복 확인에 실패했습니다.", error.toException());
                     }
                 });
-
+                dialog01.dismiss();
+            }
+        });
+        Btn_Close.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
                 dialog01.dismiss();
             }
         });
@@ -506,122 +482,6 @@ public class FoodActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        getSupportActionBar().setTitle("Food");
-
-        // Firebase에서 최신 정보 가져오기
-        fridgeRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.exists()) {
-                    // 냉장고 정보가 존재하는 경우
-                    foodList.clear();           // 기존 음식 목록 초기화
-                    listViewAdapter.clear();    // 기존 리스트뷰 어댑터 초기화
-
-                    for (DataSnapshot foodSnapshot : snapshot.child("foodList").getChildren()) {
-                        String foodId = foodSnapshot.getKey();
-                        String foodName = foodSnapshot.child("name").getValue(String.class);
-                        String foodPlaceDetail = foodSnapshot.child("placeDetail").getValue(String.class);
-                        int foodCount = foodSnapshot.child("count").getValue(Integer.class);
-                        String foodExpirationDate = foodSnapshot.child("expirationDate").getValue(String.class);
-
-                        Food food = new Food(foodId, foodName, foodPlaceDetail, foodCount, foodExpirationDate);
-                        foodList.add(food);
-                        listViewAdapter.add(foodName);
-                    }
-
-                    listViewAdapter.notifyDataSetChanged(); // 리스트뷰 갱신
-                } else
-                    Log.e("FoodActivity", "Fridge data does not exist");        // 냉장고 정보가 존재하지 않는 경우
-
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                Log.e("FoodActivity", "Database error: " + error.getMessage());
-            }
-        });
-    }
-
-    @NonNull
-    private String getDate() {
-        Calendar cal = Calendar.getInstance();
-        int year = cal.get(Calendar.YEAR);
-        int month = cal.get(Calendar.MONTH) + 1;
-        int day = cal.get(Calendar.DAY_OF_MONTH);
-
-        return getDateToString(day, month, year);
-    }
-
-    private void initDatePicker() {
-        DatePickerDialog.OnDateSetListener dateSetListener = new DatePickerDialog.OnDateSetListener() {
-            @Override
-            public void onDateSet(DatePicker view, int year, int month, int day) {
-                String date = getDateToString(day, (month + 1), year);
-                dateset.setText(date);
-            }
-        };
-
-        Calendar cal = Calendar.getInstance();
-        int year = cal.get(Calendar.YEAR);
-        int month = cal.get(Calendar.MONTH);
-        int day = cal.get(Calendar.DAY_OF_MONTH);
-        int style = AlertDialog.THEME_HOLO_LIGHT;
-        datePickerDialog = new DatePickerDialog(this, style, dateSetListener, year, month, day);
-    }
-
-    @NonNull
-    private String getDateToString(int year, int month, int day) {
-        Log.d("날짜 확인", year + "년" + month + "월" + day + "일");
-        date = year + "-" + month + "-" + day;
-        return year + "년" + month + "월" + day + "일";
-    }
-
-    public void openDatePicker(View view) {
-        datePickerDialog.show();
-    }
-
-    private void setAlarm(String expirationDate) {
-        Intent receiverIntent = new Intent(FoodActivity.this, AlarmReceiver.class);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(FoodActivity.this, 0, receiverIntent, PendingIntent.FLAG_IMMUTABLE);
-        String from = expirationDate + " 07:00:00";
-
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy년MM월dd일 HH:mm:ss");
-        Date datetime = null;
-        try {
-            datetime = dateFormat.parse(from);
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(datetime);
-
-        alarmManager.set(AlarmManager.RTC, cal.getTimeInMillis(), pendingIntent);
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.actionbar_actions, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        int itemId = item.getItemId();
-        switch (itemId) {
-            case R.id.action_search:
-                showDialogSearch();
-                return true;
-            case R.id.action_delete_fridge:
-                showDialogDeleteFridge();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }
-
     private void deleteFridge() {
         String familyId = getIntent().getStringExtra("familyId");
         DatabaseReference fridgeRef = FirebaseDatabase.getInstance().getReference()
@@ -652,14 +512,13 @@ public class FoodActivity extends AppCompatActivity {
         List<Food> searchResults = new ArrayList<>();
 
         for (Food food : foodList) {
-            if (food.getName().contains(query)) {
+            if (food.getName().contains(query))
                 searchResults.add(food);
-            }
         }
 
-        if (searchResults.isEmpty()) {
+        if (searchResults.isEmpty())
             Toast.makeText(this, "검색 결과가 없습니다.", Toast.LENGTH_SHORT).show();
-        } else {
+        else {
             listViewAdapter.clear();
             for (Food food : searchResults) {
                 listViewAdapter.add(food.getName());
@@ -668,22 +527,22 @@ public class FoodActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == RESULT_OK) {
-            if (requestCode == REQUEST_IMAGE_PICK_FOOD) {
-                Uri selectedImageUri = data.getData();
-                imageViewFood.setImageURI(selectedImageUri);
-                uploadFoodImage(selectedImageUri);
-            } else if (requestCode == REQUEST_IMAGE_CAPTURE_FOOD) {
-                Bundle extras = data.getExtras();
-                Bitmap imageBitmap = (Bitmap) extras.get("data");
-                imageViewFood.setImageBitmap(imageBitmap);
-                Uri imageUri = getImageUri(imageBitmap);
-                uploadFoodImage(imageUri);
-            }
+    private void setAlarm(String expirationDate) {
+        Intent receiverIntent = new Intent(FoodActivity.this, AlarmReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(FoodActivity.this, 0, receiverIntent, PendingIntent.FLAG_IMMUTABLE);
+        String from = expirationDate + " 07:00:00";
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy년MM월dd일 HH:mm:ss");
+        Date datetime = null;
+        try {
+            datetime = dateFormat.parse(from);
+        } catch (ParseException e) {
+            e.printStackTrace();
         }
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(datetime);
+
+        alarmManager.set(AlarmManager.RTC, cal.getTimeInMillis(), pendingIntent);
     }
 
     private Uri getImageUri(@NonNull Bitmap bitmap) {
@@ -720,6 +579,119 @@ public class FoodActivity extends AppCompatActivity {
                             Toast.makeText(FoodActivity.this, "이미지 업로드 실패", Toast.LENGTH_SHORT).show();
                         }
                     });
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        getSupportActionBar().setTitle("Food");
+
+        // Firebase에서 최신 정보 가져오기
+        fridgeRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    // 냉장고 정보가 존재하는 경우
+                    foodList.clear();           // 기존 음식 목록 초기화
+                    listViewAdapter.clear();    // 기존 리스트뷰 어댑터 초기화
+
+                    for (DataSnapshot foodSnapshot : snapshot.child("foodList").getChildren()) {
+                        String foodId = foodSnapshot.getKey();
+                        String foodName = foodSnapshot.child("name").getValue(String.class);
+                        String foodPlaceDetail = foodSnapshot.child("placeDetail").getValue(String.class);
+                        int foodCount = foodSnapshot.child("count").getValue(Integer.class);
+                        String foodExpirationDate = foodSnapshot.child("expirationDate").getValue(String.class);
+
+                        Food food = new Food(foodId, foodName, foodPlaceDetail, foodCount, foodExpirationDate);
+                        foodList.add(food);
+                        listViewAdapter.add(foodName);
+                    }
+                    listViewAdapter.notifyDataSetChanged(); // 리스트뷰 갱신
+                } else
+                    Log.e("FoodActivity", "Fridge data does not exist");        // 냉장고 정보가 존재하지 않는 경우
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e("FoodActivity", "Database error: " + error.getMessage());
+            }
+        });
+    }
+
+    @NonNull
+    private String getDate() {
+        Calendar cal = Calendar.getInstance();
+        int year = cal.get(Calendar.YEAR);
+        int month = cal.get(Calendar.MONTH) + 1;
+        int day = cal.get(Calendar.DAY_OF_MONTH);
+
+        return getDateToString(year, month, day);
+    }
+
+    private void initDatePicker() {
+        DatePickerDialog.OnDateSetListener dateSetListener = new DatePickerDialog.OnDateSetListener() {
+            @Override
+            public void onDateSet(DatePicker view, int year, int month, int day) {
+                String date = getDateToString(year, (month + 1), day);
+                dateset.setText(date);
+            }
+        };
+
+        Calendar cal = Calendar.getInstance();
+        int year = cal.get(Calendar.YEAR);
+        int month = cal.get(Calendar.MONTH);
+        int day = cal.get(Calendar.DAY_OF_MONTH);
+        int style = AlertDialog.THEME_HOLO_LIGHT;
+        datePickerDialog = new DatePickerDialog(this, style, dateSetListener, year, month, day);
+    }
+
+    @NonNull
+    private String getDateToString(int year, int month, int day) {
+        Log.d("날짜 확인", year + "년" + month + "월" + day + "일");
+        return year + "년" + month + "월" + day + "일";
+    }
+
+    public void openDatePicker(View view) {
+        datePickerDialog.show();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.actionbar_actions, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        int itemId = item.getItemId();
+        switch (itemId) {
+            case R.id.action_search:
+                showDialogSearch();
+                return true;
+            case R.id.action_delete_fridge:
+                showDialogDeleteFridge();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK) {
+            if (requestCode == REQUEST_IMAGE_PICK_FOOD) {
+                Uri selectedImageUri = data.getData();
+                imageViewFood.setImageURI(selectedImageUri);
+                uploadFoodImage(selectedImageUri);
+            } else if (requestCode == REQUEST_IMAGE_CAPTURE_FOOD) {
+                Bundle extras = data.getExtras();
+                Bitmap imageBitmap = (Bitmap) extras.get("data");
+                imageViewFood.setImageBitmap(imageBitmap);
+                Uri imageUri = getImageUri(imageBitmap);
+                uploadFoodImage(imageUri);
+            }
         }
     }
 }

@@ -36,6 +36,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -58,7 +59,7 @@ public class LoginActivity extends AppCompatActivity {
 
         // 자동 로그인 체크
         FirebaseUser user = mAuth.getCurrentUser();
-        if ( user != null) {
+        if (user != null) {
             // 이미 로그인된 사용자라면 메인 액티비티로 이동
             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
             startActivity(intent);
@@ -124,7 +125,8 @@ public class LoginActivity extends AppCompatActivity {
                             FirebaseUser user = mAuth.getCurrentUser();
                             if (user != null) {
                                 String userId = user.getUid();
-                                String familyId = "familyId1"; // 연결하려는 familyId
+                                Random rand = new Random();
+                                String familyId = "familyId" + rand.nextInt(); // 연결하려는 familyId, Id 뒤에는 랜덤한 정수가 추가되어 사용자들을 구분함.
 
                                 DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("users");
                                 DatabaseReference familyRef = FirebaseDatabase.getInstance().getReference("HomeDB").child(familyId);

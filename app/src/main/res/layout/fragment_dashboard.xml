@@ -15,6 +15,7 @@
         android:layout_weight="9"
         android:dividerHeight="10dp"
         android:divider="#00000000"
+        android:scrollbars="vertical"
         app:layout_constraintBottom_toTopOf="@+id/AddFoodButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
