@@ -33,6 +33,8 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -85,14 +87,12 @@ public class FurnitureActivity extends AppCompatActivity {
         dialog02.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog02.setContentView(R.layout.dialog_register_product);
 
-        LayoutInflater inflater = getLayoutInflater();
-        View dialogView = inflater.inflate(R.layout.dialog_add_item, null);
-        //dialogView는 사용처가 없으나 inflater의 설정을 변경하는 내용이 있어 임시로 유지함. 설정 변경이 불필요한 경우 dialogView는 삭제하고, layout의 dialog_add_item.xml도 삭제할 것(일자:24/06/10)
+        //dialogView, dialog_add_item 내의 editText들의 사용처도 없어 삭제 처리함. 동일하게 inflater도 삭제함.(일자:24/06/10)
 
         Intent refnameIntent = getIntent();
         String furnitureName = refnameIntent.getStringExtra("furnitureName");
         if (furnitureName == null || furnitureName.trim().isEmpty()) {
-            Toast.makeText(this, "물건 이름을 입력해주세요.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "물건 이름을 입력해주세요.", Toast.LENGTH_SHORT).show();      //homefragment에서 furnitureacitivty를 호출할 때 꺼지는 이유
             finish(); // 가구 이름이 없으면 액티비티를 종료합니다.
             return;
         }
@@ -201,7 +201,7 @@ public class FurnitureActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                 if (intent.resolveActivity(getPackageManager()) != null)
-                    startActivityForResult(intent, REQUEST_IMAGE_CAPTURE);
+                    startActivityForResult(intent, REQUEST_IMAGE_CAPTURE);      //카메라 실행 시 다이얼로그가 강제로 종료됨.(일자:24/06/08)
             }
         });
 
@@ -233,13 +233,45 @@ public class FurnitureActivity extends AppCompatActivity {
                 }
                 }
 
-                DatabaseReference itemRef = itemsRef.push();
-                Map<String, Object> itemMap = new HashMap<>();
-                itemMap.put("name", itemName);
-                itemMap.put("placeDetail", itemPosition);
-                itemMap.put("count", itemCount);
+                //DatabaseReference itemRef = itemsRef.push();  //대신 랜덤id를 사용하는 product 생성
+                Product product = new Product(UUID.randomUUID().toString(), itemName, itemPosition, itemCount);
 
-                itemRef.setValue(itemMap)
+                Map<String, Object> itemData = new HashMap<>();
+                itemData.put("name", itemName);
+                itemData.put("placeDetail", itemPosition);
+                itemData.put("count", itemCount);
+
+                Query quEry = itemsRef.orderByKey().orderByChild("name").equalTo(itemName);     //furnitureRef와 비교하여 사용할 것
+                Query query = furnitureRef.orderByChild("items").orderByChild("name").equalTo(itemName);
+                query.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if(snapshot.exists())
+                            Toast.makeText(FurnitureActivity.this, "이미 존재하는 가구 이름입니다.", Toast.LENGTH_SHORT).show();
+                        else {
+                            furnitureRef.child("items").child(product.getId()).setValue(itemData)
+                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                        @Override
+                                        public void onSuccess(Void unused) {
+                                            Toast.makeText(FurnitureActivity.this, "물건 추가에 성공했습니다.", Toast.LENGTH_SHORT).show();
+                                        }
+                                    })
+                                    .addOnFailureListener(new OnFailureListener() {
+                                        @Override
+                                        public void onFailure(@NonNull Exception e) {
+                                            Toast.makeText(FurnitureActivity.this, "물건 추가에 실패했습니다.", Toast.LENGTH_SHORT).show();
+                                        }
+                                    });
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        Toast.makeText(FurnitureActivity.this, "물건 추가를 취소했습니다.", Toast.LENGTH_SHORT).show();
+                    }
+                });
+/*
+                itemRef.setValue(itemData)
                         .addOnSuccessListener(new OnSuccessListener<Void>() {
                             @Override
                             public void onSuccess(Void aVoid) {
@@ -251,7 +283,7 @@ public class FurnitureActivity extends AppCompatActivity {
                             public void onFailure(@NonNull Exception e) {
                                 Toast.makeText(FurnitureActivity.this, "물건 추가에 실패했습니다.", Toast.LENGTH_SHORT).show();
                             }
-                        });
+                        });     */
                 dialog02.dismiss();
             }
         });

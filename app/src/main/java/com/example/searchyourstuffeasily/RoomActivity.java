@@ -31,6 +31,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
@@ -85,9 +86,11 @@ public class RoomActivity extends AppCompatActivity {
                 if (snapshot.exists()) {
                     // 방 정보가 존재하는 경우
                     FrameLayout bottomContainer = findViewById(R.id.bottom_container);
-                    bottomContainer.removeAllViews(); // 기존의 뷰들을 제거
-                    furnitureList.clear(); // 기존 가구 목록 초기화
-                    furnitureImageMap.clear(); // 기존 가구 이미지 맵 초기화
+                    bottomContainer.removeAllViews();       // 기존의 뷰들을 제거
+
+                    furnitureList.clear();                  // 기존 가구 목록 초기화
+                    furnitureImageMap.clear();              // 기존 가구 이미지 맵 초기화
+
                     for (DataSnapshot furnitureSnapshot : snapshot.child("furnitureList").getChildren()) {
                         String furnitureId = furnitureSnapshot.getKey();
                         String furnitureName = furnitureSnapshot.child("name").getValue(String.class);
@@ -299,6 +302,37 @@ public class RoomActivity extends AppCompatActivity {
         furnitureData.put("type", type);
 
         DatabaseReference furnitureRef = roomRef.child("furnitureList").child(furnitureId);
+        Query query = roomRef.child("furnitureList").orderByChild("name").equalTo(name);
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if(snapshot.exists())
+                    Toast.makeText(RoomActivity.this, "이미 존재하는 가구 이름입니다.", Toast.LENGTH_SHORT).show();
+                else {
+                    furnitureRef.setValue(furnitureData)
+                            .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                @Override
+                                public void onSuccess(Void aVoid) {
+                                    Log.d("RoomActivity", "Furniture added to database");
+                                    Toast.makeText(RoomActivity.this, "가구가 추가되었습니다.", Toast.LENGTH_SHORT).show();
+                                }
+                            })
+                            .addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                    Log.e("RoomActivity", "Failed to add furniture to database", e);
+                                    Toast.makeText(RoomActivity.this, "가구 추가에 실패했습니다.", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Toast.makeText(RoomActivity.this, "가구 생성을 취소했습니다.", Toast.LENGTH_SHORT).show();
+            }
+        });
+/*
         furnitureRef.setValue(furnitureData)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
@@ -313,7 +347,7 @@ public class RoomActivity extends AppCompatActivity {
                         Log.e("RoomActivity", "Failed to add furniture to database", e);
                         Toast.makeText(RoomActivity.this, "가구 추가에 실패했습니다.", Toast.LENGTH_SHORT).show();
                     }
-                });
+                });         */
     }
 
     public void showDialogRegister(float posX, float posY, @NonNull View view) {
@@ -326,45 +360,36 @@ public class RoomActivity extends AppCompatActivity {
         Button closeButton = dialog01.findViewById(R.id.CloseButton1);
         String type = (String) view.getTag(); // 가구 타입 설정
 
-        if (activeButton != null) {
-            activeButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Log.d("onClick", "등록 버튼 클릭됨");
-                    String name = editText_SearchName.getText().toString().trim();
-                    if (name.isEmpty()) {
-                        Toast.makeText(RoomActivity.this, "가구 이름을 입력해주세요.", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-
-                    if (type != null)
-                        addFurniture(name, posX, posY, type, view);
-                    else
-                        Log.e("RoomActivity", "가구 타입이 null입니다.");
-
-                    editText_SearchName.setText("");
-                    dialog01.dismiss();
+        activeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d("onClick", "등록 버튼 클릭됨");
+                String name = editText_SearchName.getText().toString().trim();
+                if (name.isEmpty()) {
+                    Toast.makeText(RoomActivity.this, "가구 이름을 입력해주세요.", Toast.LENGTH_SHORT).show();
+                    return;
                 }
-            });
-        } else {
-            Log.e("RoomActivity", "ActiveButton is null");
-        }
+                if (type != null)
+                    addFurniture(name, posX, posY, type, view);
+                else
+                    Log.e("RoomActivity", "가구 타입이 null입니다.");
 
-        if (closeButton != null) {
-            closeButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    ViewGroup owner = (ViewGroup) view.getParent();
-                    if (owner != null)
-                        owner.removeView(view);
-
-                    editText_SearchName.setText("");
-                    dialog01.dismiss();
+                editText_SearchName.setText("");
+                dialog01.dismiss();
                 }
-            });
-        } else {
-            Log.e("RoomActivity", "CloseButton is null");
-        }
+        });
+
+        closeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ViewGroup owner = (ViewGroup) view.getParent();
+                if (owner != null)
+                    owner.removeView(view);
+
+                editText_SearchName.setText("");
+                dialog01.dismiss();
+            }
+        });
     }
     private void showDeleteRoomDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);

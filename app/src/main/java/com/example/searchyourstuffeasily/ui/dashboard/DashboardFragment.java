@@ -40,6 +40,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
@@ -134,6 +135,7 @@ public class DashboardFragment extends Fragment {
         });
         return root;
     }
+
     private BroadcastReceiver fridgeDeletedReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, @NonNull Intent intent) {
@@ -241,8 +243,8 @@ public class DashboardFragment extends Fragment {
         Btn_Register.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String Name = et_SearchName.getText().toString().trim();
-                if (Name.isEmpty()) {
+                String fridgeName = et_SearchName.getText().toString().trim();
+                if (fridgeName.isEmpty()) {
                     Toast.makeText(getActivity(), "냉장고 이름을 입력해주세요.", Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -250,9 +252,41 @@ public class DashboardFragment extends Fragment {
                 String fridgeId = UUID.randomUUID().toString();
 
                 Map<String, Object> fridgeData = new HashMap<>();
-                fridgeData.put("fridgename", Name);
+                fridgeData.put("fridgename", fridgeName);
 
-                if(conditionRef != null){
+                //DatabaseReference fridgeRef = mDatabase.child("HomeDB").child(familyId).child("fridgeList");      //하단의 query의 conditionRef와 같은 내용
+                Query query = conditionRef.orderByChild("fridgename").equalTo(fridgeName);
+
+                //방식 통일을 위한 테스트 코드, 정상 작동 할 시 아래 주석처리된 conditionRef 조건문은 삭제할것
+                query.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if(snapshot.exists())
+                            Toast.makeText(familyData, "이미 존재하는 냉장고 이름입니다.", Toast.LENGTH_SHORT).show();
+                        else {
+                            conditionRef.child(fridgeId).setValue(fridgeData)
+                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                        @Override
+                                        public void onSuccess(Void unused) {
+                                            Log.d("DashboardFragment", "냉장고 추가 성공");
+                                        }
+                                    })
+                                    .addOnFailureListener(new OnFailureListener() {
+                                        @Override
+                                        public void onFailure(@NonNull Exception e) {
+                                            Log.d("DashboardFragment", "냉장고 추가 실패", e);
+                                        }
+                                    });
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        Log.e("Firebase", "냉장고 추가에 실패했습니다.", error.toException());
+                    }
+                });
+                
+/*                if(conditionRef != null){
                     conditionRef.child(fridgeId).setValue(fridgeData)
                             .addOnSuccessListener(new OnSuccessListener<Void>() {
                                 @Override
@@ -267,7 +301,8 @@ public class DashboardFragment extends Fragment {
                                 }
                             });
                 } else
-                    Log.d("conditionRef", "conditionRef is null");
+                    Log.d("conditionRef", "conditionRef is null");      */
+
                 dialog01.dismiss();
             }
         });

@@ -176,9 +176,8 @@ public class HomeFragment extends Fragment {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
                     // 동일한 방 이름이 이미 존재하는 경우
-                    Activity activity = getActivity();
-                    if (activity != null)
-                        Toast.makeText(activity, "이미 존재하는 방 이름입니다.", Toast.LENGTH_SHORT).show();
+                    if (getActivity() != null)
+                        Toast.makeText(getActivity(), "이미 존재하는 방 이름입니다.", Toast.LENGTH_SHORT).show();
                 } else {
                     String roomId = roomRef.push().getKey();
                     Room room = new Room(roomId, roomName);
@@ -234,8 +233,6 @@ public class HomeFragment extends Fragment {
             this.familyId = familyId;
         }
         private List<String> itemList;
-        private SearchView searchView;
-        private ListView searchResultListView;
         private ArrayAdapter<String> searchResultAdapter;
 
         @NonNull
@@ -246,8 +243,8 @@ public class HomeFragment extends Fragment {
             View view = inflater.inflate(R.layout.dialog_search, null);
             builder.setView(view);
 
-            searchView = view.findViewById(R.id.searchView);
-            searchResultListView = view.findViewById(R.id.searchListView);
+            SearchView searchView = view.findViewById(R.id.searchView);
+            ListView searchResultListView = view.findViewById(R.id.searchListView);
 
             searchResultAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1);
             searchResultListView.setAdapter(searchResultAdapter);
@@ -273,10 +270,10 @@ public class HomeFragment extends Fragment {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     for (DataSnapshot roomSnapshot : snapshot.getChildren()) {
-                        DataSnapshot furnituresSnapshot = roomSnapshot.child("furnitures");
-                        for (DataSnapshot furnitureSnapshot : furnituresSnapshot.getChildren()) {
-                            DataSnapshot itemsSnapshot = furnitureSnapshot.child("items");
-                            for (DataSnapshot itemSnapshot : itemsSnapshot.getChildren()) {
+                        DataSnapshot fSnapshot = roomSnapshot.child("furnitures");
+                        for (DataSnapshot furnitureSnapshot : fSnapshot.getChildren()) {
+                            DataSnapshot iSnapshot = furnitureSnapshot.child("items");
+                            for (DataSnapshot itemSnapshot : iSnapshot.getChildren()) {
                                 String itemName = itemSnapshot.child("name").getValue(String.class);
                                 itemNames.add(itemName);
                             }
@@ -296,21 +293,21 @@ public class HomeFragment extends Fragment {
             return itemNames;
         }
 
-        private void openFurnitureActivity(String itemName) {
+        private void openFurnitureActivity(String itemName) {               //furnitureActivity를 호출하지만 물건 이름이 없어 FurnitureActivity가 자동으로 종료됨.
             DatabaseReference itemsRef = FirebaseDatabase.getInstance().getReference().child("homes").child(familyId).child("rooms");
             itemsRef.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    for (DataSnapshot roomSnapshot : snapshot.getChildren()) {
-                        DataSnapshot fSnapshot = roomSnapshot.child("furnitures");
-                        for (DataSnapshot furnitureSnapshot : fSnapshot.getChildren()) {
-                            DataSnapshot iSnapshot = furnitureSnapshot.child("items");
-                            for (DataSnapshot itemSnapshot : iSnapshot.getChildren()) {
-                                String currentItemName = itemSnapshot.child("name").getValue(String.class);
+                    for (DataSnapshot room : snapshot.getChildren()) {
+                        DataSnapshot fSnapshot = room.child("furnitures");
+                        for (DataSnapshot furniture : fSnapshot.getChildren()) {
+                            DataSnapshot iSnapshot = furniture.child("items");
+                            for (DataSnapshot item : iSnapshot.getChildren()) {
+                                String currentItemName = item.child("name").getValue(String.class);
                                 if (currentItemName != null && currentItemName.equals(itemName)) {
-                                    String itemId = itemSnapshot.getKey();
-                                    String roomId = roomSnapshot.getKey();
-                                    String furnitureId = furnitureSnapshot.getKey();
+                                    String itemId = item.getKey();
+                                    String roomId = room.getKey();
+                                    String furnitureId = furniture.getKey();
 
                                     Intent intent = new Intent(requireActivity(), FurnitureActivity.class);
                                     intent.putExtra("roomId", roomId);

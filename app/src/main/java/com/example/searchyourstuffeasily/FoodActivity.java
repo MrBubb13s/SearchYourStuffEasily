@@ -40,6 +40,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
@@ -299,7 +300,8 @@ public class FoodActivity extends AppCompatActivity {
                 foodData.put("place Detail", foodPosInfo);
                 foodData.put("date", expirationDate);
 
-                fridgeRef.child("foodList").orderByChild("name").equalTo(foodName).addListenerForSingleValueEvent(new ValueEventListener() {
+                Query query = fridgeRef.child("foodList").orderByChild("name").equalTo(foodName);
+                query.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
                         if (snapshot.exists())
