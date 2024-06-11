@@ -258,6 +258,7 @@ public class HomeFragment extends Fragment {
             searchResultListView.setAdapter(searchResultAdapter);
 
             //getAllItemNames를 사용하는 문자열 리스트 itemList는 사용처가 없어서 삭제처리함. 이상이 생길 시 다시 복구할 것(일자:24/06/11)
+            getAllItemNames();
             searchView.setOnQueryTextListener(this);
             searchResultListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
@@ -322,6 +323,7 @@ public class HomeFragment extends Fragment {
                                     intent.putExtra("roomId", roomId);
                                     intent.putExtra("furnitureId", furnitureId);
                                     intent.putExtra("itemId", itemId);
+                                    intent.putExtra("furnitureName", itemName);
                                     intent.putExtra("familyId", familyId); // familyId 값도 전달
 
                                     startActivity(intent);

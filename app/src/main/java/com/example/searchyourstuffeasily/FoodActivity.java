@@ -517,25 +517,30 @@ public class FoodActivity extends AppCompatActivity {
                 });
     }
 
-    private void searchFoods(String query) {
-        List<Food> ResultList = new ArrayList<>();
+    private void searchFoods(@NonNull String query) {
+        if(query.isEmpty())
+            listView.clearTextFilter();
+        else
+            listView.setFilterText(query);
+        /*    {
+            List<Food> ResultList = new ArrayList<>();
 
-        for (Food food : Fridge.getFlist()) {
-            if (food.getName().contains(query))
-                ResultList.add(food);
-        }
-
-        if (ResultList.isEmpty())
-            Toast.makeText(this, "검색 결과가 없습니다.", Toast.LENGTH_SHORT).show();
-        else {
-            listViewAdapter.clear();
-            listViewAdapter.notifyDataSetChanged();
-            for (Food result : ResultList) {
-                //문제 발생 구간, 문제점: 검색 시 내용이 어긋난 음식이 추가됨(일자:24/06/10)
-                listViewAdapter.add(result.getName());
+            for (Food food : Fridge.getFlist()) {
+                if (food.getName().contains(query))
+                    ResultList.add(food);
             }
-            listViewAdapter.notifyDataSetChanged();
-        }
+
+            if (ResultList.isEmpty())
+                Toast.makeText(this, "검색 결과가 없습니다.", Toast.LENGTH_SHORT).show();
+            else {
+                listViewAdapter.clear();
+                for (Food result : ResultList) {
+                    //문제 발생 구간, 문제점: 검색 시 내용이 어긋난 음식이 추가됨(일자:24/06/10)
+                    listViewAdapter.add(result.getName());
+                }
+                listViewAdapter.notifyDataSetChanged();
+            }
+        }   */
     }
 
     private void setAlarm(String expirationDate) {
