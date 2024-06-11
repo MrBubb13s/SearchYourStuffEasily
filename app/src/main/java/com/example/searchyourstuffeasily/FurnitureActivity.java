@@ -234,14 +234,12 @@ public class FurnitureActivity extends AppCompatActivity {
 
                 //DatabaseReference itemRef = itemsRef.push();  //대신 랜덤id를 사용하는 product 생성
                 Product product = new Product(UUID.randomUUID().toString(), itemName, itemPosition, itemCount);
-
                 Map<String, Object> itemData = new HashMap<>();
                 itemData.put("name", itemName);
                 itemData.put("placeDetail", itemPosition);
                 itemData.put("count", itemCount);
 
-                //Query quEry = itemsRef.orderByKey().orderByChild("name").equalTo(itemName);     //furnitureRef와 비교하여 사용할 것
-                Query query = furnitureRef.orderByChild("items").orderByChild("name").equalTo(itemName);
+                Query query = itemsRef.orderByChild("name").equalTo(itemName);     //furnitureRef와 비교하여 사용할 것
                 query.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {

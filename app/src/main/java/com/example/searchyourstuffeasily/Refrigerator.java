@@ -11,12 +11,29 @@ public class Refrigerator extends Furniture {
     public Refrigerator(String name){
         super(name);
     }
+
     public ArrayList<Food> getFlist(){
         return Flist;
     }
-    public void addFood(Food f, List<Food> foodList) {
+
+    public int getFlistSize(){
+        return Flist.size();
+    }
+
+    public void addFood(Food f) {
         Flist.add(f);
-        foodList.add(f);
+    }
+
+    public void updateFood(int index, Food food){
+        Flist.set(index, food);
+    }
+
+    public void deleteFood(int index){
+        Flist.remove(index);
+    }
+
+    public int getIndexByFood(Food food){
+        return Flist.indexOf(food);
     }
 
     public Food searchFoodById(String id){

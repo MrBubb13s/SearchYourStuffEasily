@@ -65,8 +65,6 @@ public class FoodActivity extends AppCompatActivity {
     Refrigerator Fridge;
     private String fridgeId;
     private DatabaseReference fridgeRef;
-    private List<Food> foodList;
-
     private ListView listView;
     private ArrayAdapter<String> listViewAdapter;
     private static final int REQUEST_IMAGE_PICK = 1;
@@ -93,8 +91,6 @@ public class FoodActivity extends AppCompatActivity {
         dialog01.setContentView(R.layout.dialog_register_food);
 
         fridgeRef = FirebaseDatabase.getInstance().getReference().child("HomeDB").child(familyId).child("fridgeList").child(fridgeId);
-        foodList = new ArrayList<>();
-
         storageReference = FirebaseStorage.getInstance().getReference();
 
         listView = findViewById(R.id.FoodListView);
@@ -149,7 +145,7 @@ public class FoodActivity extends AppCompatActivity {
                 Food food = snapshot.getValue(Food.class);
                 if (food != null) {
                     food.setId(snapshot.getKey());
-                    foodList.add(food);
+                    Fridge.addFood(food);
                     listViewAdapter.add(food.getName());
                     listViewAdapter.notifyDataSetChanged();
                 }
@@ -162,10 +158,10 @@ public class FoodActivity extends AppCompatActivity {
 
                 if (updatedFood != null) {
                     updatedFood.setId(foodId);
-                    for (int i = 0; i < foodList.size(); i++) {
-                        Food food = foodList.get(i);
+                    for (int i = 0; i < Fridge.getFlistSize(); i++) {
+                        Food food = Fridge.searchFoodByIndex(i);
                         if (food != null && food.getId() != null && food.getId().equals(foodId)) {
-                            foodList.set(i, updatedFood);
+                            Fridge.updateFood(i, updatedFood);
                             listViewAdapter.notifyDataSetChanged();
                             break;
                         }
@@ -177,10 +173,10 @@ public class FoodActivity extends AppCompatActivity {
             public void onChildRemoved(@NonNull DataSnapshot snapshot) {
                 String foodId = snapshot.getKey();
 
-                for (int i = 0; i < foodList.size(); i++) {
-                    Food food = foodList.get(i);
+                for (int i = 0; i < Fridge.getFlistSize(); i++) {
+                    Food food = Fridge.searchFoodByIndex(i);
                     if (food != null && food.getId() != null && food.getId().equals(foodId)) {
-                        foodList.remove(i);
+                        Fridge.deleteFood(i);
                         listViewAdapter.remove(food.getName());
                         listViewAdapter.notifyDataSetChanged();
                         break;
@@ -327,7 +323,7 @@ public class FoodActivity extends AppCompatActivity {
                                     });
 
                             if (Fridge != null)
-                                Fridge.addFood(food, foodList);     // 로컬 Refrigerator 객체에 Food 추가
+                                Fridge.addFood(food);     // 로컬 Refrigerator 객체에 Food 추가
                             else
                                 Log.e("FoodActivity", "Fridge is null");
                         }
@@ -360,22 +356,12 @@ public class FoodActivity extends AppCompatActivity {
         dialog01.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         dialog01.show();
 
-        if (index < 0 || index >= foodList.size()) {
+        if (index < 0 || index >= Fridge.getFlistSize()) {
             Log.e("FoodActivity", "Invalid index");
             return;
         }
 
         initDatePicker();
-        /*Food food = foodList.get(index);      //하단의 Fridge에서 가져온 food가 정상 작동할 시 삭제할 것
-        final String itemId;
-
-        if (food != null && food.getId() != null)
-            itemId = food.getId();
-        else {
-            Log.e("FoodActivity", "Food or food ID is null");
-            return;
-        }           */
-
         Food food = Fridge.searchFoodByIndex(index);
         final String itemId = food.getId();
         if(itemId == null) {
@@ -418,7 +404,7 @@ public class FoodActivity extends AppCompatActivity {
                             public void onSuccess(Void aVoid) {
                                 Log.d("FoodActivity", "Food updated successfully");
 
-                                int index = foodList.indexOf(food);
+                                int index = Fridge.getIndexByFood(food);
                                 if (index != -1) {
                                     food.setName(changedName);
                                     food.setLocationInfo(changedInfo);
@@ -446,7 +432,7 @@ public class FoodActivity extends AppCompatActivity {
                             @Override
                             public void onSuccess(Void aVoid) {
                                 Log.d("FoodActivity", "Food deleted successfully");
-                                foodList.remove(food);
+                                Fridge.deleteFood(index);
                                 listViewAdapter.notifyDataSetChanged();
                                 onResume(); // 리스트뷰 갱신을 위해 onResume() 호출
                                 dialog01.dismiss();
@@ -469,14 +455,14 @@ public class FoodActivity extends AppCompatActivity {
         builder.setPositiveButton("삭제", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                if (index >= 0 && index < foodList.size()) {
-                    Food food = foodList.get(index);
+                if (index >= 0 && index < Fridge.getFlistSize()) {
+                    Food food = Fridge.searchFoodByIndex(index);
                     fridgeRef.child("foodList").child(food.getId()).removeValue()
                             .addOnSuccessListener(new OnSuccessListener<Void>() {
                                 @Override
                                 public void onSuccess(Void aVoid) {
                                     Log.d("FoodActivity", "Food deleted successfully");
-                                    foodList.remove(food);
+                                    Fridge.deleteFood(index);
                                     listViewAdapter.notifyDataSetChanged();
                                     onResume(); // 리스트뷰 갱신을 위해 onResume() 호출
                                 }
@@ -530,7 +516,7 @@ public class FoodActivity extends AppCompatActivity {
     private void searchFoods(String query) {
         List<Food> Results = new ArrayList<>();
 
-        for (Food food : foodList) {
+        for (Food food : Fridge.getFlist()) {
             if (food.getName().contains(query))
                 Results.add(food);
         }
@@ -613,7 +599,7 @@ public class FoodActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
                     // 냉장고 정보가 존재하는 경우
-                    foodList.clear();           // 기존 음식 목록 초기화
+                    Fridge.Flist.clear();       // 기존 음식 목록 초기화
                     listViewAdapter.clear();    // 기존 리스트뷰 어댑터 초기화
 
                     for (DataSnapshot foodSnapshot : snapshot.child("foodList").getChildren()) {
@@ -624,7 +610,7 @@ public class FoodActivity extends AppCompatActivity {
                         String foodExpirationDate = foodSnapshot.child("expirationDate").getValue(String.class);
 
                         Food food = new Food(foodId, foodName, foodPlaceDetail, foodCount, foodExpirationDate);
-                        foodList.add(food);
+                        Fridge.addFood(food);
                         listViewAdapter.add(foodName);
                     }
                     listViewAdapter.notifyDataSetChanged(); // 리스트뷰 갱신
