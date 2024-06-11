@@ -197,11 +197,13 @@ public class RoomActivity extends AppCompatActivity {
             }
         });
     }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.furniture_menu, menu);
         return true;
     }
+
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int itemId = item.getItemId();
@@ -278,6 +280,7 @@ public class RoomActivity extends AppCompatActivity {
                     }
                 });
     }
+
     private void startFurnitureActivity(@NonNull FurnitureInfo furniture) {
         Intent intent = new Intent(RoomActivity.this, FurnitureActivity.class);
         intent.putExtra("furnitureId", furniture.getId());
@@ -287,6 +290,7 @@ public class RoomActivity extends AppCompatActivity {
 
         startActivity(intent);
     }
+
     private void addFurniture(String name, float posX, float posY, String type, View view) {
         String furnitureId = UUID.randomUUID().toString();
         FurnitureInfo furniture = new FurnitureInfo(furnitureId, name, posX, posY, type);
@@ -332,22 +336,6 @@ public class RoomActivity extends AppCompatActivity {
                 Toast.makeText(RoomActivity.this, "가구 생성을 취소했습니다.", Toast.LENGTH_SHORT).show();
             }
         });
-/*
-        furnitureRef.setValue(furnitureData)
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        Log.d("RoomActivity", "Furniture added to database");
-                        Toast.makeText(RoomActivity.this, "가구가 추가되었습니다.", Toast.LENGTH_SHORT).show();
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.e("RoomActivity", "Failed to add furniture to database", e);
-                        Toast.makeText(RoomActivity.this, "가구 추가에 실패했습니다.", Toast.LENGTH_SHORT).show();
-                    }
-                });         */
     }
 
     public void showDialogRegister(float posX, float posY, @NonNull View view) {
@@ -356,11 +344,11 @@ public class RoomActivity extends AppCompatActivity {
         dialog01.show();
 
         EditText editText_SearchName = dialog01.findViewById(R.id.edit_furniture_name);
-        Button activeButton = dialog01.findViewById(R.id.ActiveButton1);
-        Button closeButton = dialog01.findViewById(R.id.CloseButton1);
+        Button Btn_Register = dialog01.findViewById(R.id.ActiveButton1);
+        Button Btn_Close = dialog01.findViewById(R.id.CloseButton1);
         String type = (String) view.getTag(); // 가구 타입 설정
 
-        activeButton.setOnClickListener(new View.OnClickListener() {
+        Btn_Register.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Log.d("onClick", "등록 버튼 클릭됨");
@@ -378,8 +366,7 @@ public class RoomActivity extends AppCompatActivity {
                 dialog01.dismiss();
                 }
         });
-
-        closeButton.setOnClickListener(new View.OnClickListener() {
+        Btn_Close.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 ViewGroup owner = (ViewGroup) view.getParent();

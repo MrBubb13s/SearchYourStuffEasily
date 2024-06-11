@@ -254,10 +254,7 @@ public class DashboardFragment extends Fragment {
                 Map<String, Object> fridgeData = new HashMap<>();
                 fridgeData.put("fridgename", fridgeName);
 
-                //DatabaseReference fridgeRef = mDatabase.child("HomeDB").child(familyId).child("fridgeList");      //하단의 query의 conditionRef와 같은 내용
                 Query query = conditionRef.orderByChild("fridgename").equalTo(fridgeName);
-
-                //방식 통일을 위한 테스트 코드, 정상 작동 할 시 아래 주석처리된 conditionRef 조건문은 삭제할것
                 query.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -285,23 +282,6 @@ public class DashboardFragment extends Fragment {
                         Log.e("Firebase", "냉장고 추가에 실패했습니다.", error.toException());
                     }
                 });
-                
-/*                if(conditionRef != null){
-                    conditionRef.child(fridgeId).setValue(fridgeData)
-                            .addOnSuccessListener(new OnSuccessListener<Void>() {
-                                @Override
-                                public void onSuccess(Void aVoid) {
-                                    Log.d("DashboardFragment", "냉장고 추가 성공");
-                                }
-                            })
-                            .addOnFailureListener(new OnFailureListener() {
-                                @Override
-                                public void onFailure(@NonNull Exception e) {
-                                    Log.e("DashboardFragment", "냉장고 추가 실패", e);
-                                }
-                            });
-                } else
-                    Log.d("conditionRef", "conditionRef is null");      */
 
                 dialog01.dismiss();
             }
@@ -313,6 +293,7 @@ public class DashboardFragment extends Fragment {
             }
         });
     }
+
     //사용처 없음 확인 후 삭제 예정.(일자:24/06/05)
     public void showDialogAdjust() {
         dialog03.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));

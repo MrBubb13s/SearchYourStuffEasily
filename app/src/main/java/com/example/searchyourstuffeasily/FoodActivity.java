@@ -228,6 +228,8 @@ public class FoodActivity extends AppCompatActivity {
             public void onClick(View v) {
                 String query = edit_Search.getText().toString().trim();
                 searchFoods(query);
+
+                edit_Search.setText("");
                 dialog.dismiss();
             }
         });
@@ -235,6 +237,7 @@ public class FoodActivity extends AppCompatActivity {
         Btn_Close.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                edit_Search.setText("");
                 dialog.cancel();
             }
         });
@@ -268,6 +271,7 @@ public class FoodActivity extends AppCompatActivity {
                 String foodName = nameInput.getText().toString().trim();
                 String foodPosInfo = posInput.getText().toString().trim();
                 String countInputStr = countInput.getText().toString().trim();
+                String expirationDate = dateset.getText().toString();
                 int count;
 
                 if (foodName.isEmpty()) {                   // 이름 입력 체크
@@ -289,8 +293,6 @@ public class FoodActivity extends AppCompatActivity {
                         return;
                     }
                 }
-
-                String expirationDate = dateset.getText().toString();
 
                 Food food = new Food(UUID.randomUUID().toString(), foodName, foodPosInfo, count, expirationDate);
 
@@ -334,12 +336,19 @@ public class FoodActivity extends AppCompatActivity {
                         Log.e("Firebase", "음식 중복 확인에 실패했습니다.", error.toException());
                     }
                 });
+
+                nameInput.setText("");
+                posInput.setText("");
+                countInput.setText("");
                 dialog01.dismiss();
             }
         });
         Btn_Close.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                nameInput.setText("");
+                posInput.setText("");
+                countInput.setText("");
                 dialog01.dismiss();
             }
         });
@@ -380,6 +389,7 @@ public class FoodActivity extends AppCompatActivity {
         Button Btn_Delete = dialog01.findViewById(R.id.CloseButton3);
         Btn_Change.setText("변경");
         Btn_Delete.setText("삭제");
+
         Btn_Change.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -420,7 +430,6 @@ public class FoodActivity extends AppCompatActivity {
                         });
             }
         });
-
         Btn_Delete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -511,18 +520,19 @@ public class FoodActivity extends AppCompatActivity {
     }
 
     private void searchFoods(String query) {
-        List<Food> searchResults = new ArrayList<>();
+        List<Food> Results = new ArrayList<>();
 
         for (Food food : foodList) {
             if (food.getName().contains(query))
-                searchResults.add(food);
+                Results.add(food);
         }
 
-        if (searchResults.isEmpty())
+        if (Results.isEmpty())
             Toast.makeText(this, "검색 결과가 없습니다.", Toast.LENGTH_SHORT).show();
         else {
             listViewAdapter.clear();
-            for (Food food : searchResults) {
+            for (Food food : Results) {
+                //문제 발생 구간, 문제점: 검색 시 이름과 갯수만 복사된 음식이 추가됨(일자:24/06/10)
                 listViewAdapter.add(food.getName());
             }
             listViewAdapter.notifyDataSetChanged();

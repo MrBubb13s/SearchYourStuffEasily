@@ -126,7 +126,7 @@ public class LoginActivity extends AppCompatActivity {
                             if (user != null) {
                                 String userId = user.getUid();
                                 Random rand = new Random();
-                                String familyId = "familyId" + rand.nextInt(); // 연결하려는 familyId, Id 뒤에는 랜덤한 정수가 추가되어 사용자들을 구분함.
+                                String familyId = "familyId" + rand.nextInt(); // 연결하려는 familyId, 랜덤함수로 인해 로그인 할 때마다 아이디가 변경되는 문제점이 있음(일자:24/06/11)
 
                                 DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("users");
                                 DatabaseReference familyRef = FirebaseDatabase.getInstance().getReference("HomeDB").child(familyId);

@@ -226,11 +226,11 @@ public class FurnitureActivity extends AppCompatActivity {
                     return;
                 } else {
                     try {
-                    itemCount = Integer.parseInt(countText);
-                } catch (NumberFormatException e) {
-                    Toast.makeText(FurnitureActivity.this, "수량은 숫자로 입력해주세요.", Toast.LENGTH_SHORT).show();
-                    return;
-                }
+                        itemCount = Integer.parseInt(countText);
+                    } catch (NumberFormatException e) {
+                        Toast.makeText(FurnitureActivity.this, "수량은 숫자로 입력해주세요.", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
                 }
 
                 //DatabaseReference itemRef = itemsRef.push();  //대신 랜덤id를 사용하는 product 생성
@@ -241,7 +241,7 @@ public class FurnitureActivity extends AppCompatActivity {
                 itemData.put("placeDetail", itemPosition);
                 itemData.put("count", itemCount);
 
-                Query quEry = itemsRef.orderByKey().orderByChild("name").equalTo(itemName);     //furnitureRef와 비교하여 사용할 것
+                //Query quEry = itemsRef.orderByKey().orderByChild("name").equalTo(itemName);     //furnitureRef와 비교하여 사용할 것
                 Query query = furnitureRef.orderByChild("items").orderByChild("name").equalTo(itemName);
                 query.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
@@ -284,12 +284,18 @@ public class FurnitureActivity extends AppCompatActivity {
                                 Toast.makeText(FurnitureActivity.this, "물건 추가에 실패했습니다.", Toast.LENGTH_SHORT).show();
                             }
                         });     */
+                nameInput.setText("");
+                positionInput.setText("");
+                countInput.setText("");
                 dialog02.dismiss();
             }
         });
         Btn_Close.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                nameInput.setText("");
+                positionInput.setText("");
+                countInput.setText("");
                 dialog02.dismiss();
             }
         });
@@ -394,6 +400,7 @@ public class FurnitureActivity extends AppCompatActivity {
             }
         });
     }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);

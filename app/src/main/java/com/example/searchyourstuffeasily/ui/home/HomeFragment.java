@@ -81,7 +81,6 @@ public class HomeFragment extends Fragment {
                 showAddRoomDialog();
             }
         });
-
         Btn_Search.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -192,6 +191,14 @@ public class HomeFragment extends Fragment {
         });
     }
 
+    private String getKeyByValue(Map<String, String> map, String value) {
+        for (Map.Entry<String, String> entry : map.entrySet()) {
+            if (entry.getValue().equals(value))
+                return entry.getKey();
+        }
+        return null;
+    }
+
     private void showAddRoomDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setTitle("방 추가");
@@ -207,13 +214,14 @@ public class HomeFragment extends Fragment {
                     Toast.makeText(getActivity(), "방 이름을 입력해주세요.", Toast.LENGTH_SHORT).show();
                 } else {
                     addRoom(roomName);
+                    input.setText("");
                 }
             }
         });
-
         builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                input.setText("");
                 dialog.cancel();
             }
         });
@@ -227,12 +235,12 @@ public class HomeFragment extends Fragment {
     }
 
     public static class SearchDialogFragment extends DialogFragment implements SearchView.OnQueryTextListener {
-        private String familyId;
+        private final String familyId;
 
         public SearchDialogFragment(String familyId) {
             this.familyId = familyId;
         }
-        private List<String> itemList;
+
         private ArrayAdapter<String> searchResultAdapter;
 
         @NonNull
@@ -249,7 +257,7 @@ public class HomeFragment extends Fragment {
             searchResultAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1);
             searchResultListView.setAdapter(searchResultAdapter);
 
-            itemList = getAllItemNames();
+            //getAllItemNames를 사용하는 문자열 리스트 itemList는 사용처가 없어서 삭제처리함. 이상이 생길 시 다시 복구할 것(일자:24/06/11)
             searchView.setOnQueryTextListener(this);
             searchResultListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
@@ -262,6 +270,7 @@ public class HomeFragment extends Fragment {
             return builder.create();
         }
 
+        //문자열 리스트를 삭제한 뒤로 사용처 없음. 확인 후 이상없으면 삭제할 예정(일자:24/06/11)
         private List<String> getAllItemNames() {
             List<String> itemNames = new ArrayList<>();
 
@@ -342,13 +351,5 @@ public class HomeFragment extends Fragment {
             searchResultAdapter.getFilter().filter(newText);
             return false;
         }
-    }
-
-    private String getKeyByValue(Map<String, String> map, String value) {
-        for (Map.Entry<String, String> entry : map.entrySet()) {
-            if (entry.getValue().equals(value))
-                return entry.getKey();
-        }
-        return null;
     }
 }
