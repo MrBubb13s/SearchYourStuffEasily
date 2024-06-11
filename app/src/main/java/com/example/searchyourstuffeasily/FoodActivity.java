@@ -99,10 +99,10 @@ public class FoodActivity extends AppCompatActivity {
 
         //dialog상의 내용을 onCreate에서 먼저 처리함.
         imageViewFood = dialog01.findViewById(R.id.imageViewFood);
-        Button Btn_Register = dialog01.findViewById(R.id.buttonUploadFood);
+        Button Btn_ImgUpload = dialog01.findViewById(R.id.buttonUploadFood);
         Button Btn_Camera = dialog01.findViewById(R.id.buttonCameraFood);
 
-        Btn_Register.setOnClickListener(new View.OnClickListener() {
+        Btn_ImgUpload.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
@@ -159,9 +159,13 @@ public class FoodActivity extends AppCompatActivity {
                 if (updatedFood != null) {
                     updatedFood.setId(foodId);
                     for (int i = 0; i < Fridge.getFlistSize(); i++) {
-                        Food food = Fridge.searchFoodByIndex(i);
+                        Food food = Fridge.getFoodByIndex(i);
                         if (food != null && food.getId() != null && food.getId().equals(foodId)) {
                             Fridge.updateFood(i, updatedFood);
+                            String oldName = Fridge.getFoodByIndex(i).getName();
+
+                            listViewAdapter.remove(oldName);
+                            listViewAdapter.insert(updatedFood.getName(), i);
                             listViewAdapter.notifyDataSetChanged();
                             break;
                         }
@@ -174,7 +178,7 @@ public class FoodActivity extends AppCompatActivity {
                 String foodId = snapshot.getKey();
 
                 for (int i = 0; i < Fridge.getFlistSize(); i++) {
-                    Food food = Fridge.searchFoodByIndex(i);
+                    Food food = Fridge.getFoodByIndex(i);
                     if (food != null && food.getId() != null && food.getId().equals(foodId)) {
                         Fridge.deleteFood(i);
                         listViewAdapter.remove(food.getName());
@@ -362,7 +366,7 @@ public class FoodActivity extends AppCompatActivity {
         }
 
         initDatePicker();
-        Food food = Fridge.searchFoodByIndex(index);
+        Food food = Fridge.getFoodByIndex(index);
         final String itemId = food.getId();
         if(itemId == null) {
             Log.e("FoodActivity", "검색한 음식 또는 음식의 아이디가 null입니다.");
@@ -448,7 +452,7 @@ public class FoodActivity extends AppCompatActivity {
         });
     }
 
-    private void showDialogDelete(final int index) {
+    private void showDialogDelete(int index) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("삭제 확인");
         builder.setMessage("선택한 음식을 삭제하시겠습니까?");
@@ -456,7 +460,7 @@ public class FoodActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 if (index >= 0 && index < Fridge.getFlistSize()) {
-                    Food food = Fridge.searchFoodByIndex(index);
+                    Food food = Fridge.getFoodByIndex(index);
                     fridgeRef.child("foodList").child(food.getId()).removeValue()
                             .addOnSuccessListener(new OnSuccessListener<Void>() {
                                 @Override
@@ -514,20 +518,21 @@ public class FoodActivity extends AppCompatActivity {
     }
 
     private void searchFoods(String query) {
-        List<Food> Results = new ArrayList<>();
+        List<Food> ResultList = new ArrayList<>();
 
         for (Food food : Fridge.getFlist()) {
             if (food.getName().contains(query))
-                Results.add(food);
+                ResultList.add(food);
         }
 
-        if (Results.isEmpty())
+        if (ResultList.isEmpty())
             Toast.makeText(this, "검색 결과가 없습니다.", Toast.LENGTH_SHORT).show();
         else {
             listViewAdapter.clear();
-            for (Food food : Results) {
-                //문제 발생 구간, 문제점: 검색 시 이름과 갯수만 복사된 음식이 추가됨(일자:24/06/10)
-                listViewAdapter.add(food.getName());
+            listViewAdapter.notifyDataSetChanged();
+            for (Food result : ResultList) {
+                //문제 발생 구간, 문제점: 검색 시 내용이 어긋난 음식이 추가됨(일자:24/06/10)
+                listViewAdapter.add(result.getName());
             }
             listViewAdapter.notifyDataSetChanged();
         }

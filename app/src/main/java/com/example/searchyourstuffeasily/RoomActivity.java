@@ -67,6 +67,7 @@ public class RoomActivity extends AppCompatActivity {
         mDatabase = FirebaseDatabase.getInstance().getReference();
         roomRef = mDatabase.child("HomeDB").child(familyId).child("roomList").child(roomId);
 
+        room = new Room(roomId, roomName);
         //furnitureList = new ArrayList<>();
         furnitureImageMap = new HashMap<>();
         MyTouchListener touchListener = new MyTouchListener();
