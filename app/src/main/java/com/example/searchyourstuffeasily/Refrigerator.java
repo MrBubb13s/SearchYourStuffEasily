@@ -1,5 +1,7 @@
 package com.example.searchyourstuffeasily;
 
+import com.google.firebase.database.snapshot.Index;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,22 +19,15 @@ public class Refrigerator extends Furniture {
         foodList.add(f);
     }
 
-    public void removeFood(String id, List<Food> foodList) {
-        for (int i = 0; i < Flist.size(); i++) {
-            Food fTemp = Flist.get(i);
-            if (fTemp.getId().equals(id)) {
-                Flist.remove(i);
-                foodList.remove(fTemp);
-                break;
-            }
-        }
-    }
-
     public Food searchFoodById(String id){
         for (Food fTemp : Flist) {
             if (fTemp.getId().equals(id))
                 return fTemp;
         }
         return null;
+    }
+
+    public Food searchFoodByIndex(int index){
+        return Flist.get(index);
     }
 }

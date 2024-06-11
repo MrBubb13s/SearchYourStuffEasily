@@ -1,23 +1,27 @@
 package com.example.searchyourstuffeasily;
 
 public class Food {
-    private String id, name, placeDetail, expirationDate;
+    private String id, name, locationInfo, expirationDate;
     private int count;
 
     public Food() {
         // Default constructor required for calls to DataSnapshot.getValue(Food.class)
     }
 
-    public Food(String id, String name, String placeDetail, int count, String expirationDate) {
+    public Food(String id, String name, String info, int count, String expirationDate) {
         this.id = id;
         this.name = name;
-        this.placeDetail = placeDetail;
+        this.locationInfo = info;
         this.count = count;
         this.expirationDate = expirationDate;
     }
 
     public String getId() {
         return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getName() {
@@ -28,12 +32,12 @@ public class Food {
         this.name = name;
     }
 
-    public String getPlaceDetail() {
-        return placeDetail;
+    public String getLocationInfo() {
+        return locationInfo;
     }
 
-    public void setPlaceDetail(String placeDetail) {
-        this.placeDetail = placeDetail;
+    public void setLocationInfo(String info) {
+        this.locationInfo = info;
     }
 
     public int getCount() {
@@ -50,10 +54,5 @@ public class Food {
 
     public void setExpirationDate(String expirationDate) {
         this.expirationDate = expirationDate;
-    }
-
-
-    public void setId(String id) {
-        this.id = id;
     }
 }

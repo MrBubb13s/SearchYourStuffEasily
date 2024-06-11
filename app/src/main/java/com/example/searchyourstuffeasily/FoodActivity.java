@@ -66,6 +66,8 @@ public class FoodActivity extends AppCompatActivity {
     private String fridgeId;
     private DatabaseReference fridgeRef;
     private List<Food> foodList;
+
+    private ListView listView;
     private ArrayAdapter<String> listViewAdapter;
     private static final int REQUEST_IMAGE_PICK = 1;
     private static final int REQUEST_IMAGE_CAPTURE = 2;
@@ -95,7 +97,7 @@ public class FoodActivity extends AppCompatActivity {
 
         storageReference = FirebaseStorage.getInstance().getReference();
 
-        ListView listView = findViewById(R.id.FoodListView);
+        listView = findViewById(R.id.FoodListView);
         listViewAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
         listView.setAdapter(listViewAdapter);
 
@@ -364,7 +366,7 @@ public class FoodActivity extends AppCompatActivity {
         }
 
         initDatePicker();
-        Food food = foodList.get(index);
+        /*Food food = foodList.get(index);      //하단의 Fridge에서 가져온 food가 정상 작동할 시 삭제할 것
         final String itemId;
 
         if (food != null && food.getId() != null)
@@ -372,18 +374,24 @@ public class FoodActivity extends AppCompatActivity {
         else {
             Log.e("FoodActivity", "Food or food ID is null");
             return;
+        }           */
+
+        Food food = Fridge.searchFoodByIndex(index);
+        final String itemId = food.getId();
+        if(itemId == null) {
+            Log.e("FoodActivity", "검색한 음식 또는 음식의 아이디가 null입니다.");
+            return;
         }
 
         EditText NameInput = dialog01.findViewById(R.id.nameInput1);
-        EditText InfoInput = dialog01.findViewById(R.id.infoInput1);
+        EditText PosInput = dialog01.findViewById(R.id.infoInput1);
         EditText CountInput = dialog01.findViewById(R.id.countInput1);
-
         dateset = dialog01.findViewById(R.id.expirationDate1);
-        dateset.setText(food.getExpirationDate());
 
         NameInput.setText(food.getName());
-        InfoInput.setText(food.getPlaceDetail());
+        PosInput.setText(food.getLocationInfo());
         CountInput.setText(String.valueOf(food.getCount()));
+        dateset.setText(food.getExpirationDate());
 
         Button Btn_Change = dialog01.findViewById(R.id.ActiveButton3);
         Button Btn_Delete = dialog01.findViewById(R.id.CloseButton3);
@@ -394,7 +402,7 @@ public class FoodActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 String changedName = NameInput.getText().toString();
-                String changedInfo = InfoInput.getText().toString();
+                String changedInfo = PosInput.getText().toString();
 
                 int changedCount = Integer.parseInt(CountInput.getText().toString());
                 Map<String, Object> foodUpdates = new HashMap<String, Object>();
@@ -413,7 +421,7 @@ public class FoodActivity extends AppCompatActivity {
                                 int index = foodList.indexOf(food);
                                 if (index != -1) {
                                     food.setName(changedName);
-                                    food.setPlaceDetail(changedInfo);
+                                    food.setLocationInfo(changedInfo);
                                     food.setCount(changedCount);
                                     food.setExpirationDate(dateset.getText().toString());
                                     listViewAdapter.notifyDataSetChanged();

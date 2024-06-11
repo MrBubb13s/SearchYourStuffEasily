@@ -12,7 +12,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -127,7 +126,7 @@ public class FurnitureActivity extends AppCompatActivity {
 
             @Override
             public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-                String oldName = furniture.searchProductById(dataSnapshot.getKey()).getName();
+                String oldName = furniture.getProductById(dataSnapshot.getKey()).getName();
                 furniture.updateProduct(dataSnapshot.getKey(), dataSnapshot.child("name").getValue(String.class),
                         dataSnapshot.child("placeDetail").getValue(String.class), dataSnapshot.child("count").getValue(Integer.class));
 
@@ -200,8 +199,8 @@ public class FurnitureActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                if (intent.resolveActivity(getPackageManager()) != null)
-                    startActivityForResult(intent, REQUEST_IMAGE_CAPTURE);      //카메라 실행 시 다이얼로그가 강제로 종료됨.(일자:24/06/08)
+                //if (intent.resolveActivity(getPackageManager()) != null)
+                    //startActivityForResult(intent, REQUEST_IMAGE_CAPTURE);      //deprecated된 기능, 카메라 실행 시 다이얼로그가 강제로 종료됨.(일자:24/06/08)
             }
         });
 

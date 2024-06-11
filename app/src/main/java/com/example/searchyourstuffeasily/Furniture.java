@@ -23,6 +23,24 @@ public class Furniture {
     public Product getProductByIndex(int index){
         return Plist.get(index);
     }
+    public Product getProductByName(String name) {
+        for (Product product : Plist) {
+            if (product.getName().equals(name)) {
+                return product;
+            }
+        }
+        return null;
+    }
+    public Product getProductById(String id){
+        for(int i = 0; i < Plist.size(); i++){
+            Product pTemp = Plist.get(i);
+            String str = pTemp.getId();
+
+            if(str.equals(id))
+                return pTemp;
+        }
+        return null;
+    }
 
     //deleteProduct와 searchProduct의 기능을 하나로 통합(일자:24/05/04)
     public Product manageProduct(String name, int command){
@@ -57,23 +75,5 @@ public class Furniture {
                 pTemp.setCount(count);
             };
         }
-    }
-    public Product searchProductByName(String name) {
-        for (Product product : Plist) {
-            if (product.getName().equals(name)) {
-                return product;
-            }
-        }
-        return null;
-    }
-    public Product searchProductById(String id){
-        for(int i = 0; i < Plist.size(); i++){
-            Product pTemp = Plist.get(i);
-            String str = pTemp.getId();
-
-            if(str.equals(id))
-                return pTemp;
-        }
-        return null;
     }
 }
