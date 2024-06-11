@@ -103,7 +103,7 @@ public class FurnitureActivity extends AppCompatActivity {
         furniture = new Furniture(furnitureName);
 
         furnitureRef = mDatabase.child("HomeDB").child(familyId).child("roomList").child(roomId)
-                .child("furnitureList").child(furnitureId);
+                .child("furnitureList").child(furnitureId);     //위의 itemsRef와의 차이점을 찾지 못함, itemsRef로 데베 등록 성공시 삭제 예정(일자:24/06/11)
 
         // ListView, Adapter 생성 및 연결
         adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, android.R.id.text1);
@@ -246,7 +246,7 @@ public class FurnitureActivity extends AppCompatActivity {
                         if(snapshot.exists())
                             Toast.makeText(FurnitureActivity.this, "이미 존재하는 가구 이름입니다.", Toast.LENGTH_SHORT).show();
                         else {
-                            furnitureRef.child("items").child(product.getId()).setValue(itemData)
+                            itemsRef.child(product.getId()).setValue(itemData)
                                     .addOnSuccessListener(new OnSuccessListener<Void>() {
                                         @Override
                                         public void onSuccess(Void unused) {
@@ -310,7 +310,7 @@ public class FurnitureActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 itemsRef.removeValue();
-                furnitureRef.removeValue()
+                furnitureRef.removeValue()          //확인 후 필수적이지 않으면 위의 itemsRef만 남기고 삭제할 예정(일자:24/06/11)
                         .addOnSuccessListener(new OnSuccessListener<Void>() {
                             @Override
                             public void onSuccess(Void aVoid) {

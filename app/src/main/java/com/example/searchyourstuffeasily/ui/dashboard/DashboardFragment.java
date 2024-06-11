@@ -283,12 +283,14 @@ public class DashboardFragment extends Fragment {
                     }
                 });
 
+                et_SearchName.setText("");
                 dialog01.dismiss();
             }
         });
         Btn_Close.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                et_SearchName.setText("");
                 dialog01.dismiss();
             }
         });

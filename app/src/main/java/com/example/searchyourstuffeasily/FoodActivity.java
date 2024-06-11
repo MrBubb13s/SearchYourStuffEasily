@@ -599,7 +599,7 @@ public class FoodActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
                     // 냉장고 정보가 존재하는 경우
-                    Fridge.Flist.clear();       // 기존 음식 목록 초기화
+                    Fridge.getFlist().clear();       // 기존 음식 목록 초기화
                     listViewAdapter.clear();    // 기존 리스트뷰 어댑터 초기화
 
                     for (DataSnapshot foodSnapshot : snapshot.child("foodList").getChildren()) {

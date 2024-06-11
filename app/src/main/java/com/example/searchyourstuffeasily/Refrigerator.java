@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Refrigerator extends Furniture {
-    ArrayList<Food> Flist = new ArrayList<Food>();
+    private final ArrayList<Food> Flist = new ArrayList<Food>();
 
     public Refrigerator(String name){
         super(name);
@@ -20,8 +20,8 @@ public class Refrigerator extends Furniture {
         return Flist.size();
     }
 
-    public void addFood(Food f) {
-        Flist.add(f);
+    public void addFood(Food food) {
+        Flist.add(food);
     }
 
     public void updateFood(int index, Food food){

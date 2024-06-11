@@ -2,8 +2,8 @@ package com.example.searchyourstuffeasily;
 
 //보관될 물품들의 정보를 클래스로 정의
 public class Product {
-    String id, name, locationInfo, placeLog;
-    int count;
+    private String id, name, locationInfo, placeLog;
+    private int count;
 
     //Product와 Food 구분을 분리해 생성자 개편(일자:24/05/05)
     public Product(String id, String name, String info){
@@ -18,6 +18,7 @@ public class Product {
         this.count = count;
         this.locationInfo = info;
     }
+
     public String getId() {
         return id;
     }
@@ -30,6 +31,7 @@ public class Product {
     public int getCount(){
         return count;
     }
+
     public void setName(String name){
         this.name = name;
     }
