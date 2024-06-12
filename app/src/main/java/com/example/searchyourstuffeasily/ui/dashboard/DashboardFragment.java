@@ -283,63 +283,15 @@ public class DashboardFragment extends Fragment {
                     }
                 });
 
-                et_SearchName.setText("");
+                et_SearchName.getText().clear();
                 dialog01.dismiss();
             }
         });
         Btn_Close.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                et_SearchName.setText("");
+                et_SearchName.getText().clear();
                 dialog01.dismiss();
-            }
-        });
-    }
-
-    //사용처 없음 확인 후 삭제 예정.(일자:24/06/05)
-    public void showDialogAdjust() {
-        dialog03.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        dialog03.show();
-
-        EditText et_Name = dialog03.findViewById(R.id.editText_all_purpose);
-        Button Btn_Change = dialog03.findViewById(R.id.button_all_purpose);
-        Button Btn_Close = dialog03.findViewById(R.id.button_cancel);
-
-        Btn_Change.setText("변경");
-        Btn_Close.setText("삭제");
-        et_Name.setHint(category);
-
-        Btn_Change.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // DB변경 로직 작성
-                dialog03.dismiss();
-            }
-        });
-        Btn_Close.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                showDialogDelete();
-                dialog03.dismiss();
-            }
-        });
-    }
-
-    public void showDialogDelete() {
-        dialog02.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-        dialog02.show();
-
-        TextView textView = dialog02.findViewById(R.id.Confirm_Del_Text);
-        Button Btn_Delete = dialog02.findViewById(R.id.Confirm_Del_Button);
-
-        textView.setText(category + "와\n" + category + "안의 목록을 정말 삭제하시겠습니까? ");
-        textView.setTextSize(20);
-
-        Btn_Delete.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // DB 삭제 로직 작성
-                dialog02.dismiss();
             }
         });
     }

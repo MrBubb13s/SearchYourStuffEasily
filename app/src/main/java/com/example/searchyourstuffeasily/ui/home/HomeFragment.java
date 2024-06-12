@@ -1,6 +1,5 @@
 package com.example.searchyourstuffeasily.ui.home;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
@@ -214,14 +213,14 @@ public class HomeFragment extends Fragment {
                     Toast.makeText(getActivity(), "방 이름을 입력해주세요.", Toast.LENGTH_SHORT).show();
                 } else {
                     addRoom(roomName);
-                    input.setText("");
+                    input.getText().clear();
                 }
             }
         });
         builder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                input.setText("");
+                input.getText().clear();
                 dialog.cancel();
             }
         });
@@ -236,12 +235,11 @@ public class HomeFragment extends Fragment {
 
     public static class SearchDialogFragment extends DialogFragment implements SearchView.OnQueryTextListener {
         private final String familyId;
+        private ArrayAdapter<String> searchResultAdapter;
 
         public SearchDialogFragment(String familyId) {
             this.familyId = familyId;
         }
-
-        private ArrayAdapter<String> searchResultAdapter;
 
         @NonNull
         @Override
@@ -257,7 +255,7 @@ public class HomeFragment extends Fragment {
             searchResultAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1);
             searchResultListView.setAdapter(searchResultAdapter);
 
-            //getAllItemNames를 사용하는 문자열 리스트 itemList는 사용처가 없어서 삭제처리함. 이상이 생길 시 다시 복구할 것(일자:24/06/11)
+            //문자열 리스트 itemList는 사용하지 않아 삭제함. 대신 itemList가 호출하던 함수는 리턴값이 없는 함수로 변경함.(일자:24/06/12)
             getAllItemNames();
             searchView.setOnQueryTextListener(this);
             searchResultListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -271,8 +269,7 @@ public class HomeFragment extends Fragment {
             return builder.create();
         }
 
-        //문자열 리스트를 삭제한 뒤로 사용처 없음. 확인 후 이상없으면 삭제할 예정(일자:24/06/11)
-        private List<String> getAllItemNames() {
+        private void getAllItemNames() {
             List<String> itemNames = new ArrayList<>();
 
             DatabaseReference itemsRef = FirebaseDatabase.getInstance().getReference().child("homes").child(familyId).child("rooms");
@@ -299,11 +296,9 @@ public class HomeFragment extends Fragment {
                     Log.e("SearchDialogFragment", "Failed to retrieve item names", error.toException());
                 }
             });
-
-            return itemNames;
         }
 
-        private void openFurnitureActivity(String itemName) {               //furnitureActivity를 호출하지만 물건 이름이 없어 FurnitureActivity가 자동으로 종료됨.
+        private void openFurnitureActivity(String itemName) {
             DatabaseReference itemsRef = FirebaseDatabase.getInstance().getReference().child("homes").child(familyId).child("rooms");
             itemsRef.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
@@ -315,16 +310,15 @@ public class HomeFragment extends Fragment {
                             for (DataSnapshot item : iSnapshot.getChildren()) {
                                 String currentItemName = item.child("name").getValue(String.class);
                                 if (currentItemName != null && currentItemName.equals(itemName)) {
-                                    String itemId = item.getKey();
+                                    //String itemId = item.getKey();        //furnitureactivty를 시작할 때 itemId는 불필요함.
                                     String roomId = room.getKey();
                                     String furnitureId = furniture.getKey();
 
                                     Intent intent = new Intent(requireActivity(), FurnitureActivity.class);
+                                    intent.putExtra("familyId", familyId); // familyId 값도 전달
                                     intent.putExtra("roomId", roomId);
                                     intent.putExtra("furnitureId", furnitureId);
-                                    intent.putExtra("itemId", itemId);
                                     intent.putExtra("furnitureName", itemName);
-                                    intent.putExtra("familyId", familyId); // familyId 값도 전달
 
                                     startActivity(intent);
                                     dismiss();

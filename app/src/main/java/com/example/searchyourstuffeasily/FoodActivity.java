@@ -146,6 +146,7 @@ public class FoodActivity extends AppCompatActivity {
                 if (food != null) {
                     food.setId(snapshot.getKey());
                     Fridge.addFood(food);
+
                     listViewAdapter.add(food.getName());
                     listViewAdapter.notifyDataSetChanged();
                 }
@@ -161,8 +162,8 @@ public class FoodActivity extends AppCompatActivity {
                     for (int i = 0; i < Fridge.getFlistSize(); i++) {
                         Food food = Fridge.getFoodByIndex(i);
                         if (food != null && food.getId() != null && food.getId().equals(foodId)) {
+                            String oldName = food.getName();
                             Fridge.updateFood(i, updatedFood);
-                            String oldName = Fridge.getFoodByIndex(i).getName();
 
                             listViewAdapter.remove(oldName);
                             listViewAdapter.insert(updatedFood.getName(), i);
@@ -181,6 +182,7 @@ public class FoodActivity extends AppCompatActivity {
                     Food food = Fridge.getFoodByIndex(i);
                     if (food != null && food.getId() != null && food.getId().equals(foodId)) {
                         Fridge.deleteFood(i);
+
                         listViewAdapter.remove(food.getName());
                         listViewAdapter.notifyDataSetChanged();
                         break;
@@ -197,8 +199,6 @@ public class FoodActivity extends AppCompatActivity {
             }
         });
     }
-    //showDialogAddFood는 바로 DialogRegister을 호출하는 것으로 대체하여 삭제함.
-    //showDialogFood는 리스트뷰에 표현된 음식이 터치되었을 때 DialogAdjustByIndex가 켜지는 것으로 대체되어 삭제함.(일자:24/06/10)
 
     private void showDialogDeleteFridge() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -229,17 +229,19 @@ public class FoodActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 String query = edit_Search.getText().toString().trim();
-                searchFoods(query);
-
-                edit_Search.setText("");
+                if(query.isEmpty())             //내용이 길지 않아 searchFood 함수는 삭제하고 내부에 로직 구현
+                    listView.clearTextFilter();
+                else
+                    listViewAdapter.getFilter().filter(query);
+                
+                edit_Search.getText().clear();
                 dialog.dismiss();
             }
         });
-
         Btn_Close.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                edit_Search.setText("");
+                edit_Search.getText().clear();
                 dialog.cancel();
             }
         });
@@ -264,14 +266,14 @@ public class FoodActivity extends AppCompatActivity {
         Btn_Register.setText("등록");
 
         EditText nameInput = dialog01.findViewById(R.id.nameInput1);
-        EditText posInput = dialog01.findViewById(R.id.infoInput1);
+        EditText InfoInput = dialog01.findViewById(R.id.infoInput1);
         EditText countInput = dialog01.findViewById(R.id.countInput1);
 
         Btn_Register.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 String foodName = nameInput.getText().toString().trim();
-                String foodPosInfo = posInput.getText().toString().trim();
+                String foodLocation = InfoInput.getText().toString().trim();
                 String countInputStr = countInput.getText().toString().trim();
                 String expirationDate = dateset.getText().toString();
                 int count;
@@ -280,7 +282,7 @@ public class FoodActivity extends AppCompatActivity {
                     Toast.makeText(FoodActivity.this, "음식 이름을 입력해주세요.", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                if (foodPosInfo.isEmpty()) {                // 상세정보 입력 체크
+                if (foodLocation.isEmpty()) {                // 상세정보 입력 체크
                     Toast.makeText(FoodActivity.this, "상세 정보를 입력해주세요.", Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -296,12 +298,12 @@ public class FoodActivity extends AppCompatActivity {
                     }
                 }
 
-                Food food = new Food(UUID.randomUUID().toString(), foodName, foodPosInfo, count, expirationDate);
+                Food food = new Food(UUID.randomUUID().toString(), foodName, foodLocation, count, expirationDate);
 
                 Map<String, Object> foodData = new HashMap<>();
                 foodData.put("name", foodName);
                 foodData.put("count", count);
-                foodData.put("place Detail", foodPosInfo);
+                foodData.put("placeDetail", foodLocation);
                 foodData.put("date", expirationDate);
 
                 Query query = fridgeRef.child("foodList").orderByChild("name").equalTo(foodName);
@@ -326,31 +328,32 @@ public class FoodActivity extends AppCompatActivity {
                                         }
                                     });
 
-                            if (Fridge != null)
-                                Fridge.addFood(food);     // 로컬 Refrigerator 객체에 Food 추가
-                            else
-                                Log.e("FoodActivity", "Fridge is null");
+                            /*{             //이미 onChildAdd에서 Fridge에 음식을 추가함. 확인 후 이상 없으면 삭제할 것(일자:24/06/13)
+                                    if (Fridge != null)
+                                    Fridge.addFood(food);     // 로컬 Refrigerator 객체에 Food 추가
+                                else
+                                    Log.e("FoodActivity", "Fridge is null");
+                            }*/
                         }
                     }
-
                     @Override
                     public void onCancelled(@NonNull DatabaseError error) {
                         Log.e("Firebase", "음식 중복 확인에 실패했습니다.", error.toException());
                     }
                 });
 
-                nameInput.setText("");
-                posInput.setText("");
-                countInput.setText("");
+                nameInput.getText().clear();
+                InfoInput.getText().clear();
+                countInput.getText().clear();
                 dialog01.dismiss();
             }
         });
         Btn_Close.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                nameInput.setText("");
-                posInput.setText("");
-                countInput.setText("");
+                nameInput.getText().clear();
+                InfoInput.getText().clear();
+                countInput.getText().clear();
                 dialog01.dismiss();
             }
         });
@@ -436,7 +439,7 @@ public class FoodActivity extends AppCompatActivity {
                             @Override
                             public void onSuccess(Void aVoid) {
                                 Log.d("FoodActivity", "Food deleted successfully");
-                                Fridge.deleteFood(index);
+                                Fridge.getFlist().remove(food);
                                 listViewAdapter.notifyDataSetChanged();
                                 onResume(); // 리스트뷰 갱신을 위해 onResume() 호출
                                 dialog01.dismiss();
@@ -466,7 +469,7 @@ public class FoodActivity extends AppCompatActivity {
                                 @Override
                                 public void onSuccess(Void aVoid) {
                                     Log.d("FoodActivity", "Food deleted successfully");
-                                    Fridge.deleteFood(index);
+                                    Fridge.getFlist().remove(food);
                                     listViewAdapter.notifyDataSetChanged();
                                     onResume(); // 리스트뷰 갱신을 위해 onResume() 호출
                                 }
@@ -515,32 +518,6 @@ public class FoodActivity extends AppCompatActivity {
                         Toast.makeText(FoodActivity.this, "냉장고 삭제에 실패했습니다.", Toast.LENGTH_SHORT).show();
                     }
                 });
-    }
-
-    private void searchFoods(@NonNull String query) {
-        if(query.isEmpty())
-            listView.clearTextFilter();
-        else
-            listView.setFilterText(query);
-        /*    {
-            List<Food> ResultList = new ArrayList<>();
-
-            for (Food food : Fridge.getFlist()) {
-                if (food.getName().contains(query))
-                    ResultList.add(food);
-            }
-
-            if (ResultList.isEmpty())
-                Toast.makeText(this, "검색 결과가 없습니다.", Toast.LENGTH_SHORT).show();
-            else {
-                listViewAdapter.clear();
-                for (Food result : ResultList) {
-                    //문제 발생 구간, 문제점: 검색 시 내용이 어긋난 음식이 추가됨(일자:24/06/10)
-                    listViewAdapter.add(result.getName());
-                }
-                listViewAdapter.notifyDataSetChanged();
-            }
-        }   */
     }
 
     private void setAlarm(String expirationDate) {
@@ -700,12 +677,14 @@ public class FoodActivity extends AppCompatActivity {
             if (requestCode == REQUEST_IMAGE_PICK_FOOD) {
                 Uri selectedImageUri = data.getData();
                 imageViewFood.setImageURI(selectedImageUri);
+
                 uploadFoodImage(selectedImageUri);
             } else if (requestCode == REQUEST_IMAGE_CAPTURE_FOOD) {
                 Bundle extras = data.getExtras();
                 Bitmap imageBitmap = (Bitmap) extras.get("data");
                 imageViewFood.setImageBitmap(imageBitmap);
                 Uri imageUri = getImageUri(imageBitmap);
+
                 uploadFoodImage(imageUri);
             }
         }

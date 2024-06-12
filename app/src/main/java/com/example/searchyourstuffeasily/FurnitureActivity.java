@@ -86,12 +86,10 @@ public class FurnitureActivity extends AppCompatActivity {
         dialog02.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog02.setContentView(R.layout.dialog_register_product);
 
-        //dialogView, dialog_add_item 내의 editText들의 사용처도 없어 삭제 처리함. 동일하게 inflater도 삭제함.(일자:24/06/10)
-
         Intent refnameIntent = getIntent();
         String furnitureName = refnameIntent.getStringExtra("furnitureName");
         if (furnitureName == null || furnitureName.trim().isEmpty()) {
-            Toast.makeText(this, "물건 이름을 입력해주세요.", Toast.LENGTH_SHORT).show();      //homefragment에서 furnitureacitivty를 호출할 때 꺼지는 이유
+            Toast.makeText(this, "물건 이름을 입력해주세요.", Toast.LENGTH_SHORT).show();
             finish(); // 가구 이름이 없으면 액티비티를 종료합니다.
             return;
         }
@@ -103,7 +101,9 @@ public class FurnitureActivity extends AppCompatActivity {
         furniture = new Furniture(furnitureName);
 
         furnitureRef = mDatabase.child("HomeDB").child(familyId).child("roomList").child(roomId)
-                .child("furnitureList").child(furnitureId);     //위의 itemsRef와의 차이점을 찾지 못함, itemsRef로 데베 등록 성공시 삭제 예정(일자:24/06/11)
+                .child("furnitureList").child(furnitureId);
+        //위의 itemsRef은 물건의 정보를, furnitureRef는 가구의 정보를 저장, 둘이 별개의 db 경로를 가짐.
+        //가구 내에 물건을 저장하도록 db를 수정하려면 itemsRef로 지정된 경로를 모두 furnitureRef로 변경해야함.
 
         // ListView, Adapter 생성 및 연결
         adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, android.R.id.text1);
@@ -138,9 +138,10 @@ public class FurnitureActivity extends AppCompatActivity {
 
             @Override
             public void onChildRemoved(DataSnapshot dataSnapshot) {
+                furniture.manageProduct(dataSnapshot.child("name").getValue(String.class), 1);
+
                 adapter.remove(dataSnapshot.child("name").getValue(String.class));
                 adapter.notifyDataSetChanged();
-                furniture.manageProduct(dataSnapshot.child("name").getValue(String.class), 1);
             }
 
             @Override
@@ -199,8 +200,8 @@ public class FurnitureActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                //if (intent.resolveActivity(getPackageManager()) != null)
-                    //startActivityForResult(intent, REQUEST_IMAGE_CAPTURE);      //deprecated된 기능, 카메라 실행 시 다이얼로그가 강제로 종료됨.(일자:24/06/08)
+                if (intent.resolveActivity(getPackageManager()) != null)
+                    startActivityForResult(intent, REQUEST_IMAGE_CAPTURE);      //deprecated된 기능, 카메라 실행 시 다이얼로그가 강제로 종료됨.(일자:24/06/08)
             }
         });
 
@@ -232,14 +233,13 @@ public class FurnitureActivity extends AppCompatActivity {
                     }
                 }
 
-                //DatabaseReference itemRef = itemsRef.push();  //대신 랜덤id를 사용하는 product 생성
                 Product product = new Product(UUID.randomUUID().toString(), itemName, itemPosition, itemCount);
                 Map<String, Object> itemData = new HashMap<>();
                 itemData.put("name", itemName);
                 itemData.put("placeDetail", itemPosition);
                 itemData.put("count", itemCount);
 
-                Query query = itemsRef.orderByChild("name").equalTo(itemName);     //furnitureRef와 비교하여 사용할 것
+                Query query = itemsRef.orderByChild("name").equalTo(itemName);
                 query.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -267,32 +267,19 @@ public class FurnitureActivity extends AppCompatActivity {
                         Toast.makeText(FurnitureActivity.this, "물건 추가를 취소했습니다.", Toast.LENGTH_SHORT).show();
                     }
                 });
-/*
-                itemRef.setValue(itemData)
-                        .addOnSuccessListener(new OnSuccessListener<Void>() {
-                            @Override
-                            public void onSuccess(Void aVoid) {
-                                Toast.makeText(FurnitureActivity.this, "물건이 추가되었습니다.", Toast.LENGTH_SHORT).show();
-                            }
-                        })
-                        .addOnFailureListener(new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                Toast.makeText(FurnitureActivity.this, "물건 추가에 실패했습니다.", Toast.LENGTH_SHORT).show();
-                            }
-                        });     */
-                nameInput.setText("");
-                positionInput.setText("");
-                countInput.setText("");
+
+                nameInput.getText().clear();
+                positionInput.getText().clear();
+                countInput.getText().clear();
                 dialog02.dismiss();
             }
         });
         Btn_Close.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                nameInput.setText("");
-                positionInput.setText("");
-                countInput.setText("");
+                nameInput.getText().clear();
+                positionInput.getText().clear();
+                countInput.getText().clear();
                 dialog02.dismiss();
             }
         });
@@ -300,17 +287,16 @@ public class FurnitureActivity extends AppCompatActivity {
 
     public void showDialogDelete() {
         dialog01.show();
-        TextView Txt_Result = dialog01.findViewById(R.id.Confirm_Del_Text);
-        Button Btn_Search = dialog01.findViewById(R.id.Confirm_Del_Button);
+        TextView Txt_Message = dialog01.findViewById(R.id.Confirm_Del_Text);
+        Button Btn_Delete = dialog01.findViewById(R.id.Confirm_Del_Button);
 
-        Txt_Result.setTextSize(20);
-        Txt_Result.setText("해당 가구를 삭제하시겠습니까?");
+        Txt_Message.setTextSize(20);
+        Txt_Message.setText("해당 가구를 삭제하시겠습니까?");
 
-        Btn_Search.setOnClickListener(new View.OnClickListener() {
+        Btn_Delete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                itemsRef.removeValue();
-                furnitureRef.removeValue()          //확인 후 필수적이지 않으면 위의 itemsRef만 남기고 삭제할 예정(일자:24/06/11)
+                itemsRef.removeValue()          //원래는 itemsRef와 furnituresRef 둘 다 removeValue를 호출하고 아래 리스너들은 furnitureRef에 연결되어있었음.
                         .addOnSuccessListener(new OnSuccessListener<Void>() {
                             @Override
                             public void onSuccess(Void aVoid) {
@@ -405,12 +391,14 @@ public class FurnitureActivity extends AppCompatActivity {
             if (requestCode == REQUEST_IMAGE_PICK) {
                 Uri selectedImageUri = data.getData();
                 imageViewFurniture.setImageURI(selectedImageUri);
+
                 uploadFurnitureImage(selectedImageUri);
             } else if (requestCode == REQUEST_IMAGE_CAPTURE) {
                 Bundle extras = data.getExtras();
                 Bitmap imageBitmap = (Bitmap) extras.get("data");
                 imageViewFurniture.setImageBitmap(imageBitmap);
                 Uri imageUri = getImageUri(imageBitmap);
+
                 uploadFurnitureImage(imageUri);
             }
         }

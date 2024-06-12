@@ -4,7 +4,6 @@ import java.util.ArrayList;
 
 //본래 클래스명은 Room이었으나 실제로는 가구들의 리스트로 방을 만드는 방식으로 이루어진 것 같아 클래스 명칭을 Room에서 Furniture로 변경(일자:24/05/05)
 public class Furniture {
-    Product product;
     ArrayList<Product> Plist = new ArrayList<Product>();
     String name;
 
@@ -16,9 +15,6 @@ public class Furniture {
     }
     public ArrayList<Product> getPlist(){
         return Plist;
-    }
-    public void addProduct(Product p){
-        Plist.add(p);
     }
     public Product getProductByIndex(int index){
         return Plist.get(index);
@@ -42,6 +38,9 @@ public class Furniture {
         return null;
     }
 
+    public void addProduct(Product p){
+        Plist.add(p);
+    }
     //deleteProduct와 searchProduct의 기능을 하나로 통합(일자:24/05/04)
     public Product manageProduct(String name, int command){
         for(int i = 0; i < Plist.size(); i++){
@@ -50,14 +49,13 @@ public class Furniture {
             switch(command){
                 case 1:             //기존의 deleteProduct를 대체함.
                     if(str.equals(name)){
-                        product = Plist.get(i);
                         Plist.remove(i);
                         return null;
                     }
                     break;
                 case 2:             //기존의 searchProduct를 대체함.
                     if(str.equals(name)){
-                        product = Plist.get(i);
+                        Product product = Plist.get(i);
                         return product;
                     }
             }

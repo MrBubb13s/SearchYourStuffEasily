@@ -46,7 +46,6 @@ public class RoomActivity extends AppCompatActivity {
     private Dialog dialog01;
     private String familyId, roomId, roomName;
     private DatabaseReference mDatabase, roomRef;
-    //private List<FurnitureInfo> furnitureList;        //Room.java의 리스트로 대체 시도 중, 이상 없을 시 주석 처리된 furnitureList 내용은 모두 삭제할 것(일자:24/06/11)
     Room room;
     private FrameLayout bot_frameLayout;
     private Map<String, ImageView> furnitureImageMap;
@@ -68,7 +67,6 @@ public class RoomActivity extends AppCompatActivity {
         roomRef = mDatabase.child("HomeDB").child(familyId).child("roomList").child(roomId);
 
         room = new Room(roomId, roomName);
-        //furnitureList = new ArrayList<>();
         furnitureImageMap = new HashMap<>();
         MyTouchListener touchListener = new MyTouchListener();
         MyDragListener dragListener = new MyDragListener();
@@ -91,8 +89,7 @@ public class RoomActivity extends AppCompatActivity {
                     FrameLayout bottomContainer = findViewById(R.id.bottom_container);
                     bottomContainer.removeAllViews();       // 기존의 뷰들을 제거
 
-                    room.getFurnitureList().clear();
-                    //furnitureList.clear();                  // 기존 가구 목록 초기화
+                    room.getFurnitureList().clear();        // 기존 가구 목록 초기화
                     furnitureImageMap.clear();              // 기존 가구 이미지 맵 초기화
 
                     for (DataSnapshot furnitureSnapshot : snapshot.child("furnitureList").getChildren()) {
@@ -104,7 +101,6 @@ public class RoomActivity extends AppCompatActivity {
 
                         FurnitureInfo furniture = new FurnitureInfo(furnitureId, furnitureName, posX, posY, furnitureType);
                         room.addRoom(furniture);
-                        //furnitureList.add(furniture);
 
                         int resourceId = getResources().getIdentifier(furnitureType, "drawable", getPackageName());
                         ImageView furnitureImage = new ImageView(RoomActivity.this);
@@ -131,7 +127,6 @@ public class RoomActivity extends AppCompatActivity {
                     // 방 정보가 존재하지 않는 경우
                     Room room = new Room(roomId, roomName);
                     roomRef.setValue(room);
-                    //furnitureList = room.getFurnitureList();
                 }
             }
 
@@ -155,8 +150,7 @@ public class RoomActivity extends AppCompatActivity {
                     FrameLayout bottomContainer = findViewById(R.id.bottom_container);
                     bottomContainer.removeAllViews(); // 기존의 뷰들을 제거
 
-                    room.getFurnitureList().clear();
-                    //furnitureList.clear(); // 기존 가구 리스트 초기화
+                    room.getFurnitureList().clear(); // 기존 가구 리스트 초기화
                     furnitureImageMap.clear(); // 기존 가구 이미지 맵 초기화
 
                     for (DataSnapshot furnitureSnapshot : snapshot.child("furnitureList").getChildren()) {
@@ -168,7 +162,6 @@ public class RoomActivity extends AppCompatActivity {
 
                         FurnitureInfo furniture = new FurnitureInfo(furnitureId, furnitureName, posX, posY, furnitureType);
                         room.addRoom(furniture);
-                        //furnitureList.add(furniture);
 
                         int resourceId = getResources().getIdentifier(furnitureType, "drawable", getPackageName());
                         ImageView furnitureImage = new ImageView(RoomActivity.this);
@@ -194,7 +187,6 @@ public class RoomActivity extends AppCompatActivity {
                     // 방 정보가 존재하지 않는 경우
                     Room room = new Room(roomId, roomName);
                     roomRef.setValue(room);
-                    //furnitureList = room.getFurnitureList();
                 }
             }
 
@@ -303,7 +295,6 @@ public class RoomActivity extends AppCompatActivity {
         FurnitureInfo furniture = new FurnitureInfo(furnitureId, name, posX, posY, type);
 
         room.addRoom(furniture);
-        //furnitureList.add(furniture);
         furnitureImageMap.put(furnitureId, (ImageView) view);
 
         view.setTag(furnitureId);  // 가구의 ID를 ImageView의 태그로 설정
@@ -370,7 +361,7 @@ public class RoomActivity extends AppCompatActivity {
                 else
                     Log.e("RoomActivity", "가구 타입이 null입니다.");
 
-                editText_SearchName.setText("");
+                editText_SearchName.getText().clear();
                 dialog01.dismiss();
                 }
         });
@@ -381,7 +372,7 @@ public class RoomActivity extends AppCompatActivity {
                 if (owner != null)
                     owner.removeView(view);
 
-                editText_SearchName.setText("");
+                editText_SearchName.getText().clear();
                 dialog01.dismiss();
             }
         });

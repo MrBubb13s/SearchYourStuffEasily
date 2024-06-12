@@ -37,7 +37,7 @@ public class Product {
     }
     public void setCount(int count) {
         this.count = count;
-    }   //upCount와 downCount의 역할은 setCount의 기능으로 폐합(일자:24/05/01)
+    }
     public void setLocationInfo(String info){
         this.locationInfo = info;
     }

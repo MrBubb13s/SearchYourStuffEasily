@@ -9,7 +9,6 @@ public class Refrigerator extends Furniture {
         super(name);
     }
 
-
     public ArrayList<Food> getFlist(){
         return Flist;
     }
