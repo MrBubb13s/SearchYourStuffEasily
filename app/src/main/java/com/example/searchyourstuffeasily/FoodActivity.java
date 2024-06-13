@@ -327,13 +327,6 @@ public class FoodActivity extends AppCompatActivity {
                                             Log.e("Firebase", "음식 정보 추가에 실패했습니다.", e);
                                         }
                                     });
-
-                            /*{             //이미 onChildAdd에서 Fridge에 음식을 추가함. 확인 후 이상 없으면 삭제할 것(일자:24/06/13)
-                                    if (Fridge != null)
-                                    Fridge.addFood(food);     // 로컬 Refrigerator 객체에 Food 추가
-                                else
-                                    Log.e("FoodActivity", "Fridge is null");
-                            }*/
                         }
                     }
                     @Override
@@ -420,7 +413,6 @@ public class FoodActivity extends AppCompatActivity {
                                     listViewAdapter.notifyDataSetChanged();
                                 }
                                 onResume(); // 리스트뷰 갱신을 위해 onResume() 호출
-                                dialog01.dismiss();
                             }
                         })
                         .addOnFailureListener(new OnFailureListener() {
@@ -429,6 +421,11 @@ public class FoodActivity extends AppCompatActivity {
                                 Log.e("FoodActivity", "Failed to update food", e);
                             }
                         });
+
+                NameInput.getText().clear();
+                PosInput.getText().clear();
+                CountInput.getText().clear();
+                dialog01.dismiss();
             }
         });
         Btn_Delete.setOnClickListener(new View.OnClickListener() {
@@ -442,7 +439,6 @@ public class FoodActivity extends AppCompatActivity {
                                 Fridge.getFlist().remove(food);
                                 listViewAdapter.notifyDataSetChanged();
                                 onResume(); // 리스트뷰 갱신을 위해 onResume() 호출
-                                dialog01.dismiss();
                             }
                         })
                         .addOnFailureListener(new OnFailureListener() {
@@ -451,6 +447,11 @@ public class FoodActivity extends AppCompatActivity {
                                 Log.e("FoodActivity", "Failed to delete food", e);
                             }
                         });
+                
+                NameInput.getText().clear();
+                PosInput.getText().clear();
+                CountInput.getText().clear();
+                dialog01.dismiss();
             }
         });
     }

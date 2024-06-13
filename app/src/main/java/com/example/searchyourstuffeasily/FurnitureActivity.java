@@ -187,7 +187,6 @@ public class FurnitureActivity extends AppCompatActivity {
         Button Btn_Upload = dialog02.findViewById(R.id.buttonUpload);
         Button Btn_Camera = dialog02.findViewById(R.id.buttonCamera);
         Btn_Register.setText("추가");
-        Btn_Close.setText("취소");
 
         Btn_Upload.setOnClickListener(new View.OnClickListener() {
             @Override
