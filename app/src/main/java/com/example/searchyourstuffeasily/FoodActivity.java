@@ -3,6 +3,7 @@ package com.example.searchyourstuffeasily;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.FileProvider;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import android.content.DialogInterface;
@@ -15,9 +16,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.ImageDecoder;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
@@ -47,13 +50,13 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -63,14 +66,13 @@ public class FoodActivity extends AppCompatActivity {
     Button dateset;
     DatePickerDialog datePickerDialog;
     Refrigerator Fridge;
-    private String fridgeId;
+    private String fridgeId, imageFilePath;
     private DatabaseReference fridgeRef;
     private ListView listView;
     private ArrayAdapter<String> listViewAdapter;
     private static final int REQUEST_IMAGE_PICK = 1;
     private static final int REQUEST_IMAGE_CAPTURE = 2;
-    private static final int REQUEST_IMAGE_PICK_FOOD = 3;
-    private static final int REQUEST_IMAGE_CAPTURE_FOOD = 4;
+    private Uri imageUri;
     private StorageReference storageReference;
     private ImageView imageViewFood;
 
@@ -106,7 +108,7 @@ public class FoodActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                startActivityForResult(intent, REQUEST_IMAGE_PICK_FOOD);
+                startActivityForResult(intent, REQUEST_IMAGE_PICK);
             }
         });
         Btn_Camera.setOnClickListener(new View.OnClickListener() {
@@ -114,7 +116,7 @@ public class FoodActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                 if (intent.resolveActivity(getPackageManager()) != null) {
-                    startActivityForResult(intent, REQUEST_IMAGE_CAPTURE_FOOD);
+                    turnOnCamera(intent);
                 }
             }
         });
@@ -447,7 +449,7 @@ public class FoodActivity extends AppCompatActivity {
                                 Log.e("FoodActivity", "Failed to delete food", e);
                             }
                         });
-                
+
                 NameInput.getText().clear();
                 PosInput.getText().clear();
                 CountInput.getText().clear();
@@ -495,6 +497,31 @@ public class FoodActivity extends AppCompatActivity {
         dialog.show();
     }
 
+    private void turnOnCamera(Intent intent) {
+        File file = null;
+        try{
+            String timeStamp = new SimpleDateFormat("yyyyMMdd").format(new Date());
+            String imgName = "Caputure_" + timeStamp + "_";
+
+            File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+            file = File.createTempFile(
+                    imgName,
+                    ".png",
+                    storageDir
+            );
+            imageFilePath = file.getAbsolutePath();
+        } catch (IOException e){
+            Log.e("Camera", "createTempFile을 실패했습니다.");
+        }
+
+        if(file != null){
+            imageUri = FileProvider.getUriForFile(this, getPackageName(), file);
+
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+            startActivityForResult(intent, REQUEST_IMAGE_CAPTURE);
+        }
+    }
+
     private void deleteFridge() {
         String familyId = getIntent().getStringExtra("familyId");
         DatabaseReference fridgeRef = FirebaseDatabase.getInstance().getReference()
@@ -539,12 +566,12 @@ public class FoodActivity extends AppCompatActivity {
         alarmManager.set(AlarmManager.RTC, cal.getTimeInMillis(), pendingIntent);
     }
 
-    private Uri getImageUri(@NonNull Bitmap bitmap) {
+/*    private Uri getImageUri(@NonNull Bitmap bitmap) {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
         String path = MediaStore.Images.Media.insertImage(getContentResolver(), bitmap, "Title", null);
         return Uri.parse(path);
-    }
+    } */
 
     private void uploadFoodImage(Uri imageUri) {
         if (imageUri != null) {
@@ -675,18 +702,38 @@ public class FoodActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK) {
-            if (requestCode == REQUEST_IMAGE_PICK_FOOD) {
+            if (requestCode == REQUEST_IMAGE_PICK) {
                 Uri selectedImageUri = data.getData();
                 imageViewFood.setImageURI(selectedImageUri);
 
                 uploadFoodImage(selectedImageUri);
-            } else if (requestCode == REQUEST_IMAGE_CAPTURE_FOOD) {
-                Bundle extras = data.getExtras();
+            } else if (requestCode == REQUEST_IMAGE_CAPTURE) {
+                Bitmap imageBitmap = null;
+                ImageDecoder.Source source = null;
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                    source = ImageDecoder.createSource(getContentResolver(), imageUri);
+                    try {
+                        imageBitmap = ImageDecoder.decodeBitmap(source);
+                        imageViewFood.setImageBitmap(imageBitmap);
+                        imageViewFood.setImageURI(imageUri);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                } else {
+                    try{
+                        imageBitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
+                        imageViewFood.setImageBitmap(imageBitmap);
+                        imageViewFood.setImageURI(imageUri);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+/*                Bundle extras = data.getExtras();
                 Bitmap imageBitmap = (Bitmap) extras.get("data");
                 imageViewFood.setImageBitmap(imageBitmap);
                 Uri imageUri = getImageUri(imageBitmap);
 
-                uploadFoodImage(imageUri);
+                uploadFoodImage(imageUri); */
             }
         }
     }
