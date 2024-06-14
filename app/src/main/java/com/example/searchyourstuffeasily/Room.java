@@ -2,19 +2,17 @@ package com.example.searchyourstuffeasily;
 
 import java.util.ArrayList;
 import java.util.List;
-import com.example.searchyourstuffeasily.FurnitureInfo;
+
 public class Room {
     private String roomId, roomName;
-    private List<FurnitureInfo> furnitureList;
+    private ArrayList<Furniture> furnitureList = new ArrayList<Furniture>();
 
     public Room() {
         // Default constructor required for calls to DataSnapshot.getValue(Room.class)
-        this.furnitureList = new ArrayList<>();
     }
     public Room(String roomId, String roomName) {
         this.roomId = roomId;
         this.roomName = roomName;
-        this.furnitureList = new ArrayList<>();
     }
 
     public String getRoomId() {
@@ -23,8 +21,18 @@ public class Room {
     public String getRoomName() {
         return roomName;
     }
-    public List<FurnitureInfo> getFurnitureList() {
+    public ArrayList<Furniture> getFurnitureList() {
         return furnitureList;
+    }
+    public Furniture getFurnitureById(String id){
+        for(int i = 0; i < furnitureList.size(); i++){
+            Furniture result = furnitureList.get(i);
+            String str = result.getId();
+
+            if(str.equals(id))
+                return result;
+        }
+        return null;
     }
 
     public void setRoomId(String roomId) {
@@ -33,11 +41,11 @@ public class Room {
     public void setRoomName(String roomName) {
         this.roomName = roomName;
     }
-    public void setFurnitureList(List<FurnitureInfo> furnitureList) {
-        this.furnitureList = furnitureList;
+    public void setFurnitureList(ArrayList<Furniture> fList) {
+        this.furnitureList = fList;
     }
 
-    public void addRoom(FurnitureInfo info){
-        furnitureList.add(info);
+    public void addRoom(Furniture f){
+        furnitureList.add(f);
     }
 }

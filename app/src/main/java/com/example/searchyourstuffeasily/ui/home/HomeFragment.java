@@ -310,15 +310,15 @@ public class HomeFragment extends Fragment {
                             for (DataSnapshot item : iSnapshot.getChildren()) {
                                 String currentItemName = item.child("name").getValue(String.class);
                                 if (currentItemName != null && currentItemName.equals(itemName)) {
-                                    //String itemId = item.getKey();        //furnitureactivty를 시작할 때 itemId는 불필요함.
                                     String roomId = room.getKey();
                                     String furnitureId = furniture.getKey();
+                                    String furnitureName = "검색 결과가 속한 가구";        //가구 이름이 다른 db 경로를 가지고 있어 경로를 통일하지 않는 이상 사용이 어려움.
 
                                     Intent intent = new Intent(requireActivity(), FurnitureActivity.class);
                                     intent.putExtra("familyId", familyId); // familyId 값도 전달
                                     intent.putExtra("roomId", roomId);
                                     intent.putExtra("furnitureId", furnitureId);
-                                    intent.putExtra("furnitureName", itemName);
+                                    intent.putExtra("furnitureName", furnitureName);
 
                                     startActivity(intent);
                                     dismiss();

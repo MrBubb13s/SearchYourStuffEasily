@@ -2,14 +2,21 @@ package com.example.searchyourstuffeasily;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 
+import android.Manifest;
 import android.app.Dialog;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.ImageDecoder;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
@@ -39,6 +46,8 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -49,6 +58,7 @@ public class FurnitureActivity extends AppCompatActivity {
     private static final int REQUEST_IMAGE_CAPTURE = 2;
     private StorageReference storageReference;
     private ImageView imageViewFurniture;
+    private Uri imageUri;
     Furniture furniture;
     String furnitureId;
     DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
@@ -60,6 +70,7 @@ public class FurnitureActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_furniture);
         getSupportActionBar().setTitle("Room");
+        requestPermissions();
 
         Intent intent = getIntent();
         String familyId = intent.getStringExtra("familyId");
@@ -69,6 +80,7 @@ public class FurnitureActivity extends AppCompatActivity {
         Log.d("FurnitureActivity", "familyId: " + familyId);
         Log.d("FurnitureActivity", "roomId: " + roomId);
         Log.d("FurnitureActivity", "furnitureId: " + furnitureId);
+
         ListView listView_item = (ListView) findViewById(R.id.listview_item);
         Button btn_add_item = (Button) findViewById(R.id.btn_add_item);
         btn_add_item.setOnClickListener(new View.OnClickListener() {
@@ -92,6 +104,8 @@ public class FurnitureActivity extends AppCompatActivity {
             Toast.makeText(this, "물건 이름을 입력해주세요.", Toast.LENGTH_SHORT).show();
             finish(); // 가구 이름이 없으면 액티비티를 종료합니다.
             return;
+        } else if(furnitureName.equals("검색 결과가 속한 가구")){
+            //db 경로를 통해 furnitureId와 동일한 id를 갖는 가구에서 이름을 받아오는 코드를 작성해야 함.
         }
         getSupportActionBar().setTitle(furnitureName);
 
@@ -102,8 +116,7 @@ public class FurnitureActivity extends AppCompatActivity {
 
         furnitureRef = mDatabase.child("HomeDB").child(familyId).child("roomList").child(roomId)
                 .child("furnitureList").child(furnitureId);
-        //위의 itemsRef은 물건의 정보를, furnitureRef는 가구의 정보를 저장, 둘이 별개의 db 경로를 가짐.
-        //가구 내에 물건을 저장하도록 db를 수정하려면 itemsRef로 지정된 경로를 모두 furnitureRef로 변경해야함.
+        //가구와 물건이 별개의 db 경로를 가짐. 가구 내에 물건을 저장하도록 db를 수정하려면 itemsRef로 지정된 경로를 모두 furnitureRef로 변경해야함.
 
         // ListView, Adapter 생성 및 연결
         adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, android.R.id.text1);
@@ -198,9 +211,7 @@ public class FurnitureActivity extends AppCompatActivity {
         Btn_Camera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                if (intent.resolveActivity(getPackageManager()) != null)
-                    startActivityForResult(intent, REQUEST_IMAGE_CAPTURE);      //deprecated된 기능, 카메라 실행 시 다이얼로그가 강제로 종료됨.(일자:24/06/08)
+                startCameraIntent();
             }
         });
 
@@ -233,6 +244,7 @@ public class FurnitureActivity extends AppCompatActivity {
                 }
 
                 Product product = new Product(UUID.randomUUID().toString(), itemName, itemPosition, itemCount);
+
                 Map<String, Object> itemData = new HashMap<>();
                 itemData.put("name", itemName);
                 itemData.put("placeDetail", itemPosition);
@@ -383,6 +395,29 @@ public class FurnitureActivity extends AppCompatActivity {
         });
     }
 
+    private void requestPermissions(){
+        if(ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
+                || ContextCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+                || ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{
+                    android.Manifest.permission.CAMERA,
+                    android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                    Manifest.permission.READ_EXTERNAL_STORAGE
+            }, 100);
+        }
+    }
+
+    private void startCameraIntent(){
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            File imgFile = new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), "furniture_image.jpg");
+            imageUri =  FileProvider.getUriForFile(this, "com.example.searchyourstuffeasily.fileprovider", imgFile);
+
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+            startActivityForResult(intent, REQUEST_IMAGE_CAPTURE);
+        }
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -393,21 +428,29 @@ public class FurnitureActivity extends AppCompatActivity {
 
                 uploadFurnitureImage(selectedImageUri);
             } else if (requestCode == REQUEST_IMAGE_CAPTURE) {
-                Bundle extras = data.getExtras();
-                Bitmap imageBitmap = (Bitmap) extras.get("data");
-                imageViewFurniture.setImageBitmap(imageBitmap);
-                Uri imageUri = getImageUri(imageBitmap);
-
+                Bitmap imageBitmap = null;
+                ImageDecoder.Source source = null;
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                    source = ImageDecoder.createSource(getContentResolver(), imageUri);
+                    try {
+                        imageBitmap = ImageDecoder.decodeBitmap(source);
+                        imageViewFurniture.setImageBitmap(imageBitmap);
+                        imageViewFurniture.setImageURI(imageUri);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                } else {
+                    try{
+                        imageBitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), imageUri);
+                        imageViewFurniture.setImageBitmap(imageBitmap);
+                        imageViewFurniture.setImageURI(imageUri);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
                 uploadFurnitureImage(imageUri);
             }
         }
-    }
-
-    private Uri getImageUri(@NonNull Bitmap bitmap) {
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
-        String path = MediaStore.Images.Media.insertImage(getContentResolver(), bitmap, "Title", null);
-        return Uri.parse(path);
     }
 
     private void uploadFurnitureImage(Uri imageUri) {

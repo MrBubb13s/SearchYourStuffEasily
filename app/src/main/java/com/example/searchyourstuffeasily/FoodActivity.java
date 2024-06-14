@@ -1,5 +1,9 @@
 package com.example.searchyourstuffeasily;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -49,7 +53,6 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
@@ -66,7 +69,7 @@ public class FoodActivity extends AppCompatActivity {
     Button dateset;
     DatePickerDialog datePickerDialog;
     Refrigerator Fridge;
-    private String fridgeId, imageFilePath;
+    private String fridgeId;
     private DatabaseReference fridgeRef;
     private ListView listView;
     private ArrayAdapter<String> listViewAdapter;
@@ -80,6 +83,7 @@ public class FoodActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_food);
+        requestPermissions();
 
         alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         fridgeId = getIntent().getStringExtra("fridgeId");
@@ -114,10 +118,7 @@ public class FoodActivity extends AppCompatActivity {
         Btn_Camera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                if (intent.resolveActivity(getPackageManager()) != null) {
-                    turnOnCamera(intent);
-                }
+                startCameraIntent();
             }
         });
 
@@ -202,6 +203,27 @@ public class FoodActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.actionbar_actions, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        int itemId = item.getItemId();
+        switch (itemId) {
+            case R.id.action_search:
+                showDialogSearch();
+                return true;
+            case R.id.action_delete_fridge:
+                showDialogDeleteFridge();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
     private void showDialogDeleteFridge() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("냉장고 삭제")
@@ -270,6 +292,9 @@ public class FoodActivity extends AppCompatActivity {
         EditText nameInput = dialog01.findViewById(R.id.nameInput1);
         EditText InfoInput = dialog01.findViewById(R.id.infoInput1);
         EditText countInput = dialog01.findViewById(R.id.countInput1);
+        nameInput.getText().clear();
+        InfoInput.getText().clear();
+        countInput.getText().clear();
 
         Btn_Register.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -375,6 +400,10 @@ public class FoodActivity extends AppCompatActivity {
         EditText PosInput = dialog01.findViewById(R.id.infoInput1);
         EditText CountInput = dialog01.findViewById(R.id.countInput1);
         dateset = dialog01.findViewById(R.id.expirationDate1);
+
+        NameInput.getText().clear();
+        PosInput.getText().clear();
+        CountInput.getText().clear();
 
         NameInput.setText(food.getName());
         PosInput.setText(food.getLocationInfo());
@@ -497,25 +526,23 @@ public class FoodActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    private void turnOnCamera(Intent intent) {
-        File file = null;
-        try{
-            String timeStamp = new SimpleDateFormat("yyyyMMdd").format(new Date());
-            String imgName = "Caputure_" + timeStamp + "_";
-
-            File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-            file = File.createTempFile(
-                    imgName,
-                    ".png",
-                    storageDir
-            );
-            imageFilePath = file.getAbsolutePath();
-        } catch (IOException e){
-            Log.e("Camera", "createTempFile을 실패했습니다.");
+    private void requestPermissions(){
+        if(ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
+                || ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+                || ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{
+                    Manifest.permission.CAMERA,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                    Manifest.permission.READ_EXTERNAL_STORAGE
+            }, 100);
         }
+    }
 
-        if(file != null){
-            imageUri = FileProvider.getUriForFile(this, getPackageName(), file);
+    private void startCameraIntent(){
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            File imgFile = new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), "food_image.jpg");
+            imageUri =  FileProvider.getUriForFile(this, "com.example.searchyourstuffeasily.fileprovider", imgFile);
 
             intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
             startActivityForResult(intent, REQUEST_IMAGE_CAPTURE);
@@ -565,13 +592,6 @@ public class FoodActivity extends AppCompatActivity {
 
         alarmManager.set(AlarmManager.RTC, cal.getTimeInMillis(), pendingIntent);
     }
-
-/*    private Uri getImageUri(@NonNull Bitmap bitmap) {
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
-        String path = MediaStore.Images.Media.insertImage(getContentResolver(), bitmap, "Title", null);
-        return Uri.parse(path);
-    } */
 
     private void uploadFoodImage(Uri imageUri) {
         if (imageUri != null) {
@@ -678,27 +698,6 @@ public class FoodActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.actionbar_actions, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        int itemId = item.getItemId();
-        switch (itemId) {
-            case R.id.action_search:
-                showDialogSearch();
-                return true;
-            case R.id.action_delete_fridge:
-                showDialogDeleteFridge();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }
-
-    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK) {
@@ -728,12 +727,7 @@ public class FoodActivity extends AppCompatActivity {
                         throw new RuntimeException(e);
                     }
                 }
-/*                Bundle extras = data.getExtras();
-                Bitmap imageBitmap = (Bitmap) extras.get("data");
-                imageViewFood.setImageBitmap(imageBitmap);
-                Uri imageUri = getImageUri(imageBitmap);
-
-                uploadFoodImage(imageUri); */
+                uploadFoodImage(imageUri);
             }
         }
     }

@@ -99,7 +99,7 @@ public class RoomActivity extends AppCompatActivity {
                         float posX = furnitureSnapshot.child("posX").getValue(float.class);
                         float posY = furnitureSnapshot.child("posY").getValue(float.class);
 
-                        FurnitureInfo furniture = new FurnitureInfo(furnitureId, furnitureName, posX, posY, furnitureType);
+                        Furniture furniture = new Furniture(furnitureId, furnitureName, posX, posY, furnitureType);
                         room.addRoom(furniture);
 
                         int resourceId = getResources().getIdentifier(furnitureType, "drawable", getPackageName());
@@ -160,7 +160,7 @@ public class RoomActivity extends AppCompatActivity {
                         float posX = furnitureSnapshot.child("posX").getValue(float.class);
                         float posY = furnitureSnapshot.child("posY").getValue(float.class);
 
-                        FurnitureInfo furniture = new FurnitureInfo(furnitureId, furnitureName, posX, posY, furnitureType);
+                        Furniture furniture = new Furniture(furnitureId, furnitureName, posX, posY, furnitureType);
                         room.addRoom(furniture);
 
                         int resourceId = getResources().getIdentifier(furnitureType, "drawable", getPackageName());
@@ -280,7 +280,7 @@ public class RoomActivity extends AppCompatActivity {
                 });
     }
 
-    private void startFurnitureActivity(@NonNull FurnitureInfo furniture) {
+    private void startFurnitureActivity(@NonNull Furniture furniture) {
         Intent intent = new Intent(RoomActivity.this, FurnitureActivity.class);
         intent.putExtra("furnitureId", furniture.getId());
         intent.putExtra("furnitureName", furniture.getName());
@@ -292,7 +292,7 @@ public class RoomActivity extends AppCompatActivity {
 
     private void addFurniture(String name, float posX, float posY, String type, View view) {
         String furnitureId = UUID.randomUUID().toString();
-        FurnitureInfo furniture = new FurnitureInfo(furnitureId, name, posX, posY, type);
+        Furniture furniture = new Furniture(furnitureId, name, posX, posY, type);
 
         room.addRoom(furniture);
         furnitureImageMap.put(furnitureId, (ImageView) view);
@@ -471,10 +471,10 @@ public class RoomActivity extends AppCompatActivity {
                             @Override
                             public void onClick(View v) {
                                 Log.d("OnClickListener", "배치된 이미지 클릭됨");
-                                FurnitureInfo fInfo = null;
+                                Furniture fInfo = null;
                                 String furnitureId = (String) view.getTag();
 
-                                for(FurnitureInfo furniture : room.getFurnitureList()){         //room.getFurnitureList()는 원래 furnitureList였음. 이상없으면 주석 제거할 것(일자:24/06/11)
+                                for(Furniture furniture : room.getFurnitureList()){         //room.getFurnitureList()는 원래 furnitureList였음. 이상없으면 주석 제거할 것(일자:24/06/11)
                                     if(furniture.getId().equals(furnitureId))
                                         fInfo = furniture;
                                 }
