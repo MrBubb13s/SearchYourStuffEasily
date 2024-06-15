@@ -88,9 +88,10 @@ public class FoodActivity extends AppCompatActivity {
         alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         fridgeId = getIntent().getStringExtra("fridgeId");
         String fridgeName = getIntent().getStringExtra("fridgeName");
-
-        Fridge = new Refrigerator(fridgeName);
         String familyId = getIntent().getStringExtra("familyId");
+
+        getSupportActionBar().setTitle(fridgeName);
+        Fridge = new Refrigerator(fridgeName);
 
         dialog01 = new Dialog(this);
         dialog01.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -212,16 +213,11 @@ public class FoodActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int itemId = item.getItemId();
-        switch (itemId) {
-            case R.id.action_search:
-                showDialogSearch();
-                return true;
-            case R.id.action_delete_fridge:
-                showDialogDeleteFridge();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+        if (itemId == R.id.action_delete_fridge) {
+            showDialogDeleteFridge();
+            return true;
         }
+        return super.onOptionsItemSelected(item);
     }
 
     private void showDialogDeleteFridge() {
@@ -236,41 +232,6 @@ public class FoodActivity extends AppCompatActivity {
                 })
                 .setNegativeButton("취소", null)
                 .show();
-    }
-
-    private void showDialogSearch() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        View view = getLayoutInflater().inflate(R.layout.dialog_all_purpose, null);
-        builder.setView(view);
-
-        final EditText edit_Search = view.findViewById(R.id.editText_all_purpose);
-        Button Btn_Search = view.findViewById(R.id.button_all_purpose);
-        Button Btn_Close = view.findViewById(R.id.button_cancel);
-
-        final AlertDialog dialog = builder.create();
-
-        Btn_Search.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String query = edit_Search.getText().toString().trim();
-                if(query.isEmpty())             //내용이 길지 않아 searchFood 함수는 삭제하고 내부에 로직 구현
-                    listView.clearTextFilter();
-                else
-                    listViewAdapter.getFilter().filter(query);
-                
-                edit_Search.getText().clear();
-                dialog.dismiss();
-            }
-        });
-        Btn_Close.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                edit_Search.getText().clear();
-                dialog.cancel();
-            }
-        });
-
-        dialog.show();
     }
 
     public void showDialogRegister() {

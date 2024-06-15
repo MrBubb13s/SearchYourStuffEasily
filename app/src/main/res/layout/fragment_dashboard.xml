@@ -22,6 +22,22 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <android.widget.Button
+        android:id="@+id/searchFoodButton"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_marginStart="278dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/plus_button"
+        android:text="검색"
+        android:textAllCaps="false"
+        android:textColor="@color/colorLightblue"
+        android:textSize="20sp"
+        app:layout_constraintBottom_toTopOf="@+id/AddFoodButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.68"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <android.widget.Button
         android:id="@+id/AddFoodButton"

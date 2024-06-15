@@ -1,6 +1,7 @@
 package com.example.searchyourstuffeasily.ui.dashboard;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -14,10 +15,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.TextView;
+import android.widget.SearchView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -30,6 +33,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.example.searchyourstuffeasily.FoodActivity;
 import com.example.searchyourstuffeasily.R;
 import com.example.searchyourstuffeasily.GlobalVariable;
+import com.example.searchyourstuffeasily.ui.home.DialogFragment;
 import com.example.searchyourstuffeasily.ui.home.RoomButtonAdapter;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -50,21 +54,19 @@ import java.util.Map;
 import java.util.UUID;
 
 public class DashboardFragment extends Fragment {
-    private DashboardViewModel dashboardViewModel;
-    private String category, userId, familyId;
+    private String familyId;
     private Dialog dialog01, dialog02, dialog03;
     DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
     DatabaseReference conditionRef;
     HashMap<String, String> fridgeMap = new HashMap<String, String>();
     GlobalVariable familyData;
     private RoomButtonAdapter roomButtonAdapter;
-    private ListView listview;
-    private List<String> foodNames;
 
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        dashboardViewModel = new ViewModelProvider(this).get(DashboardViewModel.class);
+        //DashboardViewModel dashboardViewModel = new ViewModelProvider(this).get(DashboardViewModel.class);
         View root = inflater.inflate(R.layout.fragment_dashboard, container, false);
         final Button Btn_AddFood = root.findViewById(R.id.AddFoodButton);
+        final Button Btn_Search = root.findViewById(R.id.searchFoodButton);
 
         dialog01 = new Dialog(getActivity());
         dialog01.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -79,10 +81,10 @@ public class DashboardFragment extends Fragment {
         dialog03.setContentView(R.layout.dialog_all_purpose);
 
         familyData = (GlobalVariable) getActivity().getApplicationContext();
-        userId = familyData.getuId();
-        foodNames = new ArrayList<>(fridgeMap.keySet());
+        String userId;
+        List<String> foodNames = new ArrayList<>(fridgeMap.keySet());
 
-        listview = root.findViewById(R.id.listview_food);
+        ListView listview = root.findViewById(R.id.listview_food);
         roomButtonAdapter = new RoomButtonAdapter(getActivity(), foodNames, fridgeMap, new RoomButtonAdapter.onRoomButtonClickListener() {
             @Override
             public void onRoomButtonClick(String fridgeName, String fridgeId) {
@@ -126,13 +128,18 @@ public class DashboardFragment extends Fragment {
                 showDialogRegister();
             }
         });
-
-        dashboardViewModel.getText().observe(getViewLifecycleOwner(), new Observer<String>() {
+        Btn_Search.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showDialogSearch();
+            }
+        });
+        /*dashboardViewModel.getText().observe(getViewLifecycleOwner(), new Observer<String>() {
             @Override
             public void onChanged(@Nullable String s) {
 
             }
-        });
+        }); */
         return root;
     }
 
@@ -294,5 +301,116 @@ public class DashboardFragment extends Fragment {
                 dialog01.dismiss();
             }
         });
+    }
+
+    private void showDialogSearch() {
+        SearchDialogFragment fragment = new SearchDialogFragment(familyId);
+        fragment.show(getParentFragmentManager(), "SearchDialogFragment");
+    }
+
+    public static class SearchDialogFragment extends DialogFragment implements SearchView.OnQueryTextListener {
+        private final String familyId;
+        private ArrayAdapter<String> adapter;
+
+        public SearchDialogFragment(String familyId) {
+            this.familyId = familyId;
+        }
+
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            LayoutInflater inflater = requireActivity().getLayoutInflater();
+            View view = inflater.inflate(R.layout.dialog_search, null);
+            builder.setView(view);
+
+            SearchView searchView = view.findViewById(R.id.searchView);
+            ListView resultListView = view.findViewById(R.id.searchListView);
+
+            adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1);
+            resultListView.setAdapter(adapter);
+
+            getAllFoodNames();
+            searchView.setOnQueryTextListener(this);
+            resultListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    String selectedItem = (String) parent.getItemAtPosition(position);
+                    openFoodActivity(selectedItem);
+                }
+            });
+            return builder.create();
+        }
+
+        private void getAllFoodNames() {
+            List<String> foodNames = new ArrayList<>();
+
+            DatabaseReference foodsRef = FirebaseDatabase.getInstance().getReference().child("HomeDB").child(familyId).child("fridgeList");
+            foodsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    for (DataSnapshot fridge : snapshot.getChildren()) {
+                        DataSnapshot fSnapshot = fridge.child("foodList");
+                        for (DataSnapshot food : fSnapshot.getChildren()) {
+                            String fName = food.child("name").getValue(String.class);
+                            foodNames.add(fName);
+                        }
+                    }
+
+                    adapter.addAll(foodNames);
+                    adapter.notifyDataSetChanged();
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    Log.e("SearchDialogFragment", "Failed to retrieve item names", error.toException());
+                }
+            });
+        }
+
+        private void openFoodActivity(String inputName) {
+            DatabaseReference foodsRef = FirebaseDatabase.getInstance().getReference().child("HomeDB").child(familyId).child("fridgeList");
+            foodsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    for (DataSnapshot fridge : snapshot.getChildren()) {
+                        DataSnapshot fSnapshot = fridge.child("foodList");
+                        for (DataSnapshot food : fSnapshot.getChildren()) {
+                            String currentFoodName = food.child("name").getValue(String.class);
+                            if (currentFoodName != null && currentFoodName.equals(inputName)) {
+                                String fridgeId = fridge.getKey();
+                                String fridgeName = fridge.child("fridgename").getValue(String.class);
+
+                                Intent intent = new Intent(requireActivity(), FoodActivity.class);
+                                intent.putExtra("familyId", familyId);
+                                intent.putExtra("fridgeId", fridgeId);
+                                intent.putExtra("fridgeName", fridgeName);
+
+                                startActivity(intent);
+                                dismiss();
+                                return;
+                            }
+                        }
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    Log.e("SearchDialogFragment", "Failed to retrieve item information", error.toException());
+                }
+            });
+        }
+
+        @Override
+        public boolean onQueryTextSubmit(String query) {
+            adapter.getFilter().filter(query);
+            return false;
+        }
+
+        @Override
+        public boolean onQueryTextChange(String newText) {
+            adapter.getFilter().filter(newText);
+            return false;
+        }
     }
 }

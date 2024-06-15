@@ -69,7 +69,6 @@ public class FurnitureActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_furniture);
-        getSupportActionBar().setTitle("Room");
         requestPermissions();
 
         Intent intent = getIntent();
@@ -90,14 +89,6 @@ public class FurnitureActivity extends AppCompatActivity {
             }
         });
 
-        dialog01 = new Dialog(FurnitureActivity.this);
-        dialog01.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog01.setContentView(R.layout.dialog_confirm_delete);
-
-        dialog02 = new Dialog(FurnitureActivity.this);
-        dialog02.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog02.setContentView(R.layout.dialog_register_product);
-
         Intent refnameIntent = getIntent();
         String furnitureName = refnameIntent.getStringExtra("furnitureName");
         if (furnitureName == null || furnitureName.trim().isEmpty()) {
@@ -107,16 +98,24 @@ public class FurnitureActivity extends AppCompatActivity {
         } else if(furnitureName.equals("검색 결과가 속한 가구")){
             //db 경로를 통해 furnitureId와 동일한 id를 갖는 가구에서 이름을 받아오는 코드를 작성해야 함.
         }
-        getSupportActionBar().setTitle(furnitureName);
 
-        // Firebase Realtime Database 경로 설정
-        itemsRef = mDatabase.child("homes").child(familyId).child("rooms").child(roomId)
-                .child("furnitures").child(furnitureId).child("items");
+        getSupportActionBar().setTitle(furnitureName);
         furniture = new Furniture(furnitureName);
 
+        dialog01 = new Dialog(FurnitureActivity.this);
+        dialog01.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog01.setContentView(R.layout.dialog_confirm_delete);
+
+        dialog02 = new Dialog(FurnitureActivity.this);
+        dialog02.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog02.setContentView(R.layout.dialog_register_product);
+
+        // Firebase Realtime Database 경로 설정
+        //가구와 물건이 별개의 db 경로를 가짐. 가구 내에 물건을 저장하도록 db를 수정하려면 itemsRef로 지정된 경로를 모두 furnitureRef로 변경해야함.
+        itemsRef = mDatabase.child("homes").child(familyId).child("rooms").child(roomId)
+                .child("furnitures").child(furnitureId).child("items");
         furnitureRef = mDatabase.child("HomeDB").child(familyId).child("roomList").child(roomId)
                 .child("furnitureList").child(furnitureId);
-        //가구와 물건이 별개의 db 경로를 가짐. 가구 내에 물건을 저장하도록 db를 수정하려면 itemsRef로 지정된 경로를 모두 furnitureRef로 변경해야함.
 
         // ListView, Adapter 생성 및 연결
         adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, android.R.id.text1);
