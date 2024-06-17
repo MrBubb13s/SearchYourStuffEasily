@@ -76,7 +76,7 @@ public class FoodActivity extends AppCompatActivity {
     private static final int REQUEST_IMAGE_PICK = 1;
     private static final int REQUEST_IMAGE_CAPTURE = 2;
     private Uri imageUri;
-    private StorageReference storageReference;
+    private StorageReference storageRef;
     private ImageView imageViewFood;
 
     @Override
@@ -98,7 +98,7 @@ public class FoodActivity extends AppCompatActivity {
         dialog01.setContentView(R.layout.dialog_register_food);
 
         fridgeRef = FirebaseDatabase.getInstance().getReference().child("HomeDB").child(familyId).child("fridgeList").child(fridgeId);
-        storageReference = FirebaseStorage.getInstance().getReference();
+        storageRef = FirebaseStorage.getInstance().getReference();
 
         listView = findViewById(R.id.FoodListView);
         listViewAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
@@ -291,7 +291,7 @@ public class FoodActivity extends AppCompatActivity {
                 Map<String, Object> foodData = new HashMap<>();
                 foodData.put("name", foodName);
                 foodData.put("count", count);
-                foodData.put("placeDetail", foodLocation);
+                foodData.put("info", foodLocation);
                 foodData.put("date", expirationDate);
 
                 Query query = fridgeRef.child("foodList").orderByChild("name").equalTo(foodName);
@@ -387,7 +387,7 @@ public class FoodActivity extends AppCompatActivity {
 
                 foodUpdates.put("name", changedName);
                 foodUpdates.put("count", changedCount);
-                foodUpdates.put("placeDetail", changedInfo);
+                foodUpdates.put("info", changedInfo);
                 foodUpdates.put("date", dateset.getText().toString());
 
                 fridgeRef.child("foodList").child(itemId).updateChildren(foodUpdates)
@@ -557,7 +557,7 @@ public class FoodActivity extends AppCompatActivity {
     private void uploadFoodImage(Uri imageUri) {
         if (imageUri != null) {
             String imageName = UUID.randomUUID().toString();
-            StorageReference imageRef = storageReference.child("foodImages/" + imageName);
+            StorageReference imageRef = storageRef.child("foodImages/" + imageName);
 
             imageRef.putFile(imageUri)
                     .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
@@ -585,10 +585,9 @@ public class FoodActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onResume() {
+    protected void onResume() {         //상세 위치 정보가 제대로 나오지 않는 원인일 수 있음, RoomActivity에는 존재하나 FurnitureActivity에는 존재하지 않음. 그럼에도 FurnitureActivity는 멀쩡하게 동작함.
         super.onResume();
-        getSupportActionBar().setTitle("Food");
-
+        
         // Firebase에서 최신 정보 가져오기
         fridgeRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -601,9 +600,9 @@ public class FoodActivity extends AppCompatActivity {
                     for (DataSnapshot foodSnapshot : snapshot.child("foodList").getChildren()) {
                         String foodId = foodSnapshot.getKey();
                         String foodName = foodSnapshot.child("name").getValue(String.class);
-                        String foodPlaceDetail = foodSnapshot.child("placeDetail").getValue(String.class);
+                        String foodPlaceDetail = foodSnapshot.child("info").getValue(String.class);
                         int foodCount = foodSnapshot.child("count").getValue(Integer.class);
-                        String foodExpirationDate = foodSnapshot.child("expirationDate").getValue(String.class);
+                        String foodExpirationDate = foodSnapshot.child("date").getValue(String.class);
 
                         Food food = new Food(foodId, foodName, foodPlaceDetail, foodCount, foodExpirationDate);
                         Fridge.addFood(food);

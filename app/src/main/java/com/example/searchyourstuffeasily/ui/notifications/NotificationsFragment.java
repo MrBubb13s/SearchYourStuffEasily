@@ -20,7 +20,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -155,15 +154,6 @@ public class NotificationsFragment extends Fragment {
         return root;
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        FragmentActivity activity = getActivity();
-        if (activity != null) {
-            // 타이틀 변경 등의 작업 수행
-        }
-    }
-
     public void showDialogPartIn() {
         Button Btn_Search = dialog01.findViewById(R.id.button_all_purpose);
         Button Btn_Cancel = dialog01.findViewById(R.id.button_cancel);
@@ -223,11 +213,6 @@ public class NotificationsFragment extends Fragment {
             familyData.setfamilyId(familyCode);
             dialog01.dismiss();
         }
-    }
-    private boolean isValidFamilyCode(String familyCode) {
-        // familyCode가 유효한지 확인하는 로직 구현
-        // 예를 들어, Firebase Realtime Database에서 해당 familyCode가 존재하는지 확인
-        return true; // 임시로 true 반환
     }
 
     private void showNoFamilyCodeDialog() {

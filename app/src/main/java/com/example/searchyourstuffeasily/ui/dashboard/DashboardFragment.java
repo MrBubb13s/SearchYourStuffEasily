@@ -26,8 +26,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.example.searchyourstuffeasily.FoodActivity;
@@ -51,6 +49,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 public class DashboardFragment extends Fragment {
@@ -63,7 +62,6 @@ public class DashboardFragment extends Fragment {
     private RoomButtonAdapter roomButtonAdapter;
 
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        //DashboardViewModel dashboardViewModel = new ViewModelProvider(this).get(DashboardViewModel.class);
         View root = inflater.inflate(R.layout.fragment_dashboard, container, false);
         final Button Btn_AddFood = root.findViewById(R.id.AddFoodButton);
         final Button Btn_Search = root.findViewById(R.id.searchFoodButton);
@@ -134,19 +132,13 @@ public class DashboardFragment extends Fragment {
                 showDialogSearch();
             }
         });
-        /*dashboardViewModel.getText().observe(getViewLifecycleOwner(), new Observer<String>() {
-            @Override
-            public void onChanged(@Nullable String s) {
-
-            }
-        }); */
         return root;
     }
 
-    private BroadcastReceiver fridgeDeletedReceiver = new BroadcastReceiver() {
+    private final BroadcastReceiver fridgeDeletedReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, @NonNull Intent intent) {
-            if (intent.getAction().equals("action.FRIDGE_DELETED")) {
+            if (Objects.equals(intent.getAction(), "action.FRIDGE_DELETED")) {       //intent.getAction().equals("action.FRIDGE_DELETED")
                 String deletedFridgeId = intent.getStringExtra("fridgeId");
                 removeFridgeFromListView(deletedFridgeId);
             }

@@ -45,7 +45,6 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
@@ -132,7 +131,7 @@ public class FurnitureActivity extends AppCompatActivity {
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                 adapter.add(dataSnapshot.child("name").getValue(String.class));
                 Product p = new Product(dataSnapshot.getKey(), dataSnapshot.child("name").getValue(String.class),
-                        dataSnapshot.child("placeDetail").getValue(String.class), dataSnapshot.child("count").getValue(Integer.class));
+                        dataSnapshot.child("info").getValue(String.class), dataSnapshot.child("count").getValue(Integer.class));
                 furniture.addProduct(p);
             }
 
@@ -140,7 +139,7 @@ public class FurnitureActivity extends AppCompatActivity {
             public void onChildChanged(DataSnapshot dataSnapshot, String s) {
                 String oldName = furniture.getProductById(dataSnapshot.getKey()).getName();
                 furniture.updateProduct(dataSnapshot.getKey(), dataSnapshot.child("name").getValue(String.class),
-                        dataSnapshot.child("placeDetail").getValue(String.class), dataSnapshot.child("count").getValue(Integer.class));
+                        dataSnapshot.child("info").getValue(String.class), dataSnapshot.child("count").getValue(Integer.class));
 
                 int pos = adapter.getPosition(oldName);
                 adapter.remove(oldName);
@@ -246,7 +245,7 @@ public class FurnitureActivity extends AppCompatActivity {
 
                 Map<String, Object> itemData = new HashMap<>();
                 itemData.put("name", itemName);
-                itemData.put("placeDetail", itemPosition);
+                itemData.put("info", itemPosition);
                 itemData.put("count", itemCount);
 
                 Query query = itemsRef.orderByChild("name").equalTo(itemName);
@@ -355,7 +354,7 @@ public class FurnitureActivity extends AppCompatActivity {
 
                 itemMap.put("name", changedName);
                 itemMap.put("count", changedCount);
-                itemMap.put("placeDetail", changedInfo);
+                itemMap.put("info", changedInfo);
 
                 itemsRef.child(itemId).updateChildren(itemMap)
                         .addOnSuccessListener(new OnSuccessListener<Void>() {
