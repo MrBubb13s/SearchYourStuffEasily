@@ -40,8 +40,11 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -69,7 +72,7 @@ public class FoodActivity extends AppCompatActivity {
     Button dateset;
     DatePickerDialog datePickerDialog;
     Refrigerator Fridge;
-    private String fridgeId;
+    private String fridgeId, currentFoodId;
     private DatabaseReference fridgeRef;
     private ListView listView;
     private ArrayAdapter<String> listViewAdapter;
@@ -149,6 +152,7 @@ public class FoodActivity extends AppCompatActivity {
                 Food food = snapshot.getValue(Food.class);
                 if (food != null) {
                     food.setId(snapshot.getKey());
+                    food.setImageUrl(snapshot.child("imageUrl").getValue(String.class));
                     Fridge.addFood(food);
 
                     listViewAdapter.add(food.getName());
@@ -163,6 +167,7 @@ public class FoodActivity extends AppCompatActivity {
 
                 if (updatedFood != null) {
                     updatedFood.setId(foodId);
+                    updatedFood.setImageUrl(snapshot.child("imageUrl").getValue(String.class));
                     for (int i = 0; i < Fridge.getFlistSize(); i++) {
                         Food food = Fridge.getFoodByIndex(i);
                         if (food != null && food.getId() != null && food.getId().equals(foodId)) {
@@ -181,7 +186,6 @@ public class FoodActivity extends AppCompatActivity {
             @Override
             public void onChildRemoved(@NonNull DataSnapshot snapshot) {
                 String foodId = snapshot.getKey();
-
                 for (int i = 0; i < Fridge.getFlistSize(); i++) {
                     Food food = Fridge.getFoodByIndex(i);
                     if (food != null && food.getId() != null && food.getId().equals(foodId)) {
@@ -287,6 +291,7 @@ public class FoodActivity extends AppCompatActivity {
                 }
 
                 Food food = new Food(UUID.randomUUID().toString(), foodName, foodLocation, count, expirationDate);
+                currentFoodId = food.getId();
 
                 Map<String, Object> foodData = new HashMap<>();
                 foodData.put("name", foodName);
@@ -352,6 +357,7 @@ public class FoodActivity extends AppCompatActivity {
         initDatePicker();
         Food food = Fridge.getFoodByIndex(index);
         final String itemId = food.getId();
+        currentFoodId = itemId;
         if(itemId == null) {
             Log.e("FoodActivity", "검색한 음식 또는 음식의 아이디가 null입니다.");
             return;
@@ -361,6 +367,7 @@ public class FoodActivity extends AppCompatActivity {
         EditText PosInput = dialog01.findViewById(R.id.infoInput1);
         EditText CountInput = dialog01.findViewById(R.id.countInput1);
         dateset = dialog01.findViewById(R.id.expirationDate1);
+        imageViewFood = dialog01.findViewById(R.id.imageViewFood);
 
         NameInput.getText().clear();
         PosInput.getText().clear();
@@ -370,6 +377,21 @@ public class FoodActivity extends AppCompatActivity {
         PosInput.setText(food.getLocationInfo());
         CountInput.setText(String.valueOf(food.getCount()));
         dateset.setText(food.getExpirationDate());
+
+        // 최신 이미지 URL을 가져와서 사용
+        StorageReference imageRef = storageRef.child("foodImages/" + itemId);
+        imageRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+            @Override
+            public void onSuccess(Uri uri) {
+                String imageUrl = uri.toString();
+                Glide.with(FoodActivity.this).load(imageUrl).into(imageViewFood);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                imageViewFood.setImageResource(R.drawable.add_image_512); // 디폴트 이미지 설정
+            }
+        });
 
         Button Btn_Change = dialog01.findViewById(R.id.ActiveButton3);
         Button Btn_Delete = dialog01.findViewById(R.id.CloseButton3);
@@ -554,9 +576,9 @@ public class FoodActivity extends AppCompatActivity {
         alarmManager.set(AlarmManager.RTC, cal.getTimeInMillis(), pendingIntent);
     }
 
-    private void uploadFoodImage(Uri imageUri) {
+    private void uploadFoodImage(Uri imageUri, String foodId) {
         if (imageUri != null) {
-            String imageName = UUID.randomUUID().toString();
+            String imageName = foodId;
             StorageReference imageRef = storageRef.child("foodImages/" + imageName);
 
             imageRef.putFile(imageUri)
@@ -567,9 +589,17 @@ public class FoodActivity extends AppCompatActivity {
                             imageRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                                 @Override
                                 public void onSuccess(Uri uri) {
-                                    // 업로드된 이미지의 다운로드 URL 획득
-                                    String imageUrl = uri.toString();
-                                    // TODO: 이미지 URL을 데이터베이스에 저장하거나 필요한 곳에 사용
+                                    String downloadUrl = uri.toString();
+                                    fridgeRef.child("foodList").child(foodId).child("imageUrl").setValue(downloadUrl)
+                                            .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                @Override
+                                                public void onComplete(@NonNull Task<Void> task) {
+                                                    if(task.isSuccessful())
+                                                        Toast.makeText(FoodActivity.this, "이미지 업로드 성공", Toast.LENGTH_SHORT).show();
+                                                    else
+                                                        Toast.makeText(FoodActivity.this, "이미지 업로드 실패", Toast.LENGTH_SHORT).show();
+                                                }
+                                            });
                                 }
                             });
                         }
@@ -665,7 +695,7 @@ public class FoodActivity extends AppCompatActivity {
                 Uri selectedImageUri = data.getData();
                 imageViewFood.setImageURI(selectedImageUri);
 
-                uploadFoodImage(selectedImageUri);
+                uploadFoodImage(selectedImageUri, currentFoodId);
             } else if (requestCode == REQUEST_IMAGE_CAPTURE) {
                 Bitmap imageBitmap = null;
                 ImageDecoder.Source source = null;
@@ -687,7 +717,7 @@ public class FoodActivity extends AppCompatActivity {
                         throw new RuntimeException(e);
                     }
                 }
-                uploadFoodImage(imageUri);
+                uploadFoodImage(imageUri, currentFoodId);
             }
         }
     }

@@ -32,8 +32,11 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -58,6 +61,7 @@ public class FurnitureActivity extends AppCompatActivity {
     private StorageReference storageReference;
     private ImageView imageViewFurniture;
     private Uri imageUri;
+    private String currentProductId;
     Furniture furniture;
     String furnitureId;
     DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
@@ -241,7 +245,10 @@ public class FurnitureActivity extends AppCompatActivity {
                     }
                 }
 
-                Product product = new Product(UUID.randomUUID().toString(), itemName, itemPosition, itemCount);
+                String productId = UUID.randomUUID().toString();
+                currentProductId = productId;
+
+                Product product = new Product(productId, itemName, itemPosition, itemCount);
 
                 Map<String, Object> itemData = new HashMap<>();
                 itemData.put("name", itemName);
@@ -332,14 +339,36 @@ public class FurnitureActivity extends AppCompatActivity {
         EditText nameInput = dialog02.findViewById(R.id.nameInput2);
         EditText positionInput = dialog02.findViewById(R.id.infoInput2);
         EditText countInput = dialog02.findViewById(R.id.countInput2);
+        imageViewFurniture = dialog02.findViewById(R.id.imageViewFurniture);
+        currentProductId = product.getId();
 
         nameInput.setText(product.getName());
         positionInput.setText(product.getLocationInfo());
         countInput.setText(String.valueOf(product.getCount()));
         String itemId = product.getId();
 
+        // 이미지 URL 가져오기
+        itemsRef.child(itemId).child("imageUrl")
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        String imageUrl = dataSnapshot.getValue(String.class);
+                        if (imageUrl != null && !imageUrl.isEmpty())
+                            Glide.with(FurnitureActivity.this).load(imageUrl).into(imageViewFurniture);
+                        else
+                            imageViewFurniture.setImageResource(R.drawable.add_image_512); // 디폴트 이미지 설정
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        imageViewFurniture.setImageResource(R.drawable.add_image_512); // 디폴트 이미지 설정
+                    }
+                });
+
         Button Btn_Change = dialog02.findViewById(R.id.ActiveButton2);
         Button Btn_Delete = dialog02.findViewById(R.id.CloseButton2);
+        Button Btn_Upload = dialog02.findViewById(R.id.buttonUpload);
+        Button Btn_Camera = dialog02.findViewById(R.id.buttonCamera);
         Btn_Change.setText("변경");
         Btn_Delete.setText("삭제");
 
@@ -348,7 +377,6 @@ public class FurnitureActivity extends AppCompatActivity {
             public void onClick(View v) {
                 String changedName = nameInput.getText().toString();
                 String changedInfo = positionInput.getText().toString();
-
                 int changedCount = Integer.parseInt(countInput.getText().toString());
                 Map<String, Object> itemMap = new HashMap<String, Object>();
 
@@ -391,6 +419,20 @@ public class FurnitureActivity extends AppCompatActivity {
                 dialog02.dismiss();
             }
         });
+        Btn_Upload.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                startActivityForResult(intent, REQUEST_IMAGE_PICK);
+            }
+        });
+        Btn_Camera.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startCameraIntent();
+            }
+        });
+
     }
 
     private void requestPermissions(){
@@ -424,7 +466,7 @@ public class FurnitureActivity extends AppCompatActivity {
                 Uri selectedImageUri = data.getData();
                 imageViewFurniture.setImageURI(selectedImageUri);
 
-                uploadFurnitureImage(selectedImageUri);
+                uploadFurnitureImage(selectedImageUri, currentProductId);
             } else if (requestCode == REQUEST_IMAGE_CAPTURE) {
                 Bitmap imageBitmap = null;
                 ImageDecoder.Source source = null;
@@ -446,12 +488,12 @@ public class FurnitureActivity extends AppCompatActivity {
                         throw new RuntimeException(e);
                     }
                 }
-                uploadFurnitureImage(imageUri);
+                uploadFurnitureImage(imageUri, currentProductId);
             }
         }
     }
 
-    private void uploadFurnitureImage(Uri imageUri) {
+    private void uploadFurnitureImage(Uri imageUri, String productId) {
         if (imageUri != null) {
             String imageName = UUID.randomUUID().toString();
             StorageReference imageRef = storageReference.child("furnitureImages/" + imageName);
@@ -464,9 +506,17 @@ public class FurnitureActivity extends AppCompatActivity {
                             imageRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                                 @Override
                                 public void onSuccess(Uri uri) {
-                                    // 업로드된 이미지의 다운로드 URL 획득
-                                    String imageUrl = uri.toString();
-                                    // TODO: 이미지 URL을 데이터베이스에 저장하거나 필요한 곳에 사용
+                                   String downloadUrl = uri.toString();
+                                   itemsRef.child(productId).child("imageUrl").setValue(downloadUrl)
+                                           .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                               @Override
+                                               public void onComplete(@NonNull Task<Void> task) {
+                                                   if(task.isSuccessful())
+                                                       Toast.makeText(FurnitureActivity.this, "이미지 업로드 성공", Toast.LENGTH_SHORT).show();
+                                                   else
+                                                       Toast.makeText(FurnitureActivity.this, "이미지 URL 저장 실패", Toast.LENGTH_SHORT).show();
+                                               }
+                                           });
                                 }
                             });
                         }
