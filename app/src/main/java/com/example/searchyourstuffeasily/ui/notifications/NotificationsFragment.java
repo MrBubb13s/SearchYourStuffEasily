@@ -5,8 +5,11 @@ import android.app.Dialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -15,6 +18,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -36,9 +40,16 @@ import com.google.firebase.database.ValueEventListener;
 
 import static android.content.Context.CLIPBOARD_SERVICE;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URL;
+
 public class NotificationsFragment extends Fragment {
     private Button Btn_PartIn;
     TextView name, email;
+    ImageView profile;
     Button signOut, revoke, familyCode;
     private NotificationsViewModel notificationsViewModel;
     private Dialog dialog01;
@@ -53,6 +64,7 @@ public class NotificationsFragment extends Fragment {
         final TextView textView = root.findViewById(R.id.family_view);
         Btn_PartIn = root.findViewById(R.id.bt_Partin);
 
+        profile = root.findViewById(R.id.image_Google);
         name = root.findViewById(R.id.id_Nname);
         email = root.findViewById(R.id.id_Email);
 
@@ -71,6 +83,7 @@ public class NotificationsFragment extends Fragment {
             // 사용자 정보 가져오기
             String userName = user.getDisplayName();
             String userEmail = user.getEmail();
+            Uri userPhoto = user.getPhotoUrl();
 
             // 사용자 정보 설정
             if (userName != null)
@@ -82,6 +95,11 @@ public class NotificationsFragment extends Fragment {
                 email.setText(userEmail);
             else
                 email.setText("이메일 없음");
+
+            if(userPhoto != null)
+                profile.setImageURI(userPhoto);
+            else
+                profile.setImageResource(R.drawable.ic_launcher_new);
 
             DatabaseReference userRef = mDatabase.child("users").child(uid);
             userRef.addValueEventListener(new ValueEventListener() {

@@ -11,7 +11,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -20,9 +19,12 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 
+import com.example.searchyourstuffeasily.CustomAdapter;
 import com.example.searchyourstuffeasily.FurnitureActivity;
+import com.example.searchyourstuffeasily.Product;
 import com.example.searchyourstuffeasily.R;
 import com.example.searchyourstuffeasily.Room;
 import com.example.searchyourstuffeasily.RoomActivity;
@@ -35,6 +37,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.firestore.core.QueryListener;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -209,9 +212,9 @@ public class HomeFragment extends Fragment {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 String roomName = input.getText().toString().trim();
-                if (TextUtils.isEmpty(roomName)) {
+                if (TextUtils.isEmpty(roomName))
                     Toast.makeText(getActivity(), "방 이름을 입력해주세요.", Toast.LENGTH_SHORT).show();
-                } else {
+                else {
                     addRoom(roomName);
                     input.getText().clear();
                 }
@@ -229,16 +232,19 @@ public class HomeFragment extends Fragment {
     }
 
     private void showSearchDialog() {
-        SearchDialogFragment searchDialogFragment = new SearchDialogFragment(familyId);
-        searchDialogFragment.show(getParentFragmentManager(), "SearchDialogFragment");
+        SearchDialogFragment SDFragment = new SearchDialogFragment(familyId, roomMap);
+        SDFragment.show(getParentFragmentManager(), "SearchDialogFragment");
     }
 
     public static class SearchDialogFragment extends DialogFragment implements SearchView.OnQueryTextListener {
         private final String familyId;
-        private ArrayAdapter<String> searchResultAdapter;
+        private final Map<String, String> roomMap;
+        private CustomAdapter adapter;
+        private ArrayList<Product> products;
 
-        public SearchDialogFragment(String familyId) {
+        public SearchDialogFragment(String familyId, Map<String, String> roomMap) {
             this.familyId = familyId;
+            this.roomMap = roomMap;
         }
 
         @NonNull
@@ -250,45 +256,64 @@ public class HomeFragment extends Fragment {
             builder.setView(view);
 
             SearchView searchView = view.findViewById(R.id.searchView);
-            ListView searchResultListView = view.findViewById(R.id.searchListView);
+            ListView resultListView = view.findViewById(R.id.searchListView);
 
-            searchResultAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1);
-            searchResultListView.setAdapter(searchResultAdapter);
+            products = new ArrayList<>();
+            adapter = new CustomAdapter(getContext(), R.layout.list_item, products);
+            resultListView.setAdapter(adapter);
 
             //문자열 리스트 itemList는 사용하지 않아 삭제함. 대신 itemList가 호출하던 함수는 리턴값이 없는 함수로 변경함.(일자:24/06/12)
             getAllItemNames();
             searchView.setOnQueryTextListener(this);
-            searchResultListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            resultListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    String selectedItem = (String) parent.getItemAtPosition(position);
+                    Product selectedItem = (Product) parent.getItemAtPosition(position);
                     openFurnitureActivity(selectedItem);
                 }
             });
-
             return builder.create();
         }
 
         private void getAllItemNames() {
-            List<String> itemNames = new ArrayList<>();
-
-            DatabaseReference itemsRef = FirebaseDatabase.getInstance().getReference().child("homes").child(familyId).child("rooms");
+            DatabaseReference itemsRef = FirebaseDatabase.getInstance().getReference().
+                    child("homes").child(familyId).child("rooms");
             itemsRef.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     for (DataSnapshot roomSnapshot : snapshot.getChildren()) {
+                        String roomId = roomSnapshot.getKey();
+                        String roomName = getRoomNameById(roomId);
+                        Log.d("getAllItems", "RoomId: " + roomId + ", RoomName: " + roomName);
+
                         DataSnapshot fSnapshot = roomSnapshot.child("furnitures");
-                        for (DataSnapshot furnitureSnapshot : fSnapshot.getChildren()) {
-                            DataSnapshot iSnapshot = furnitureSnapshot.child("items");
-                            for (DataSnapshot itemSnapshot : iSnapshot.getChildren()) {
-                                String itemName = itemSnapshot.child("name").getValue(String.class);
-                                itemNames.add(itemName);
-                            }
+                        for (DataSnapshot furniture : fSnapshot.getChildren()) {
+                            String furnitureId = furniture.getKey();
+                            getFurnitureNameById(furnitureId, roomId, new OnFurnitureNameRetrievedListener(){
+                                @Override
+                                public void onFurnitureNameRetrieved(String furnitureName){
+                                    Log.d("getAllitems", "furnitureId: " + furnitureId + ", furnitureName: " + furnitureName);
+
+                                    DataSnapshot iSnapshot = furniture.child("items");
+                                    for (DataSnapshot itemSnapshot : iSnapshot.getChildren()) {
+                                        String itemName = itemSnapshot.child("name").getValue(String.class);
+                                        String itemId = itemSnapshot.getKey();
+                                        String itemImageUrl = itemSnapshot.child("imageUrl").getValue(String.class);
+                                        Integer itemCount = itemSnapshot.child("count").getValue(Integer.class);
+                                        Log.d("getAllItems", "ItemId: " + itemId + ", ItemName: " + itemName);
+
+                                        Product p = new Product(itemId, itemName, roomName + " - " + furnitureName, itemCount != null ? itemCount : 0);
+                                        p.setImageUrl(itemImageUrl);
+                                        p.setRoomName(roomName != null ? roomName : "Unknown Room");
+                                        p.setFurnitureName(furnitureName != null ? furnitureName : "Unknown Furniture");
+
+                                        products.add(p);
+                                    }
+                                    adapter.notifyDataSetChanged();
+                                }
+                            });
                         }
                     }
-
-                    searchResultAdapter.addAll(itemNames);
-                    searchResultAdapter.notifyDataSetChanged();
                 }
 
                 @Override
@@ -298,53 +323,99 @@ public class HomeFragment extends Fragment {
             });
         }
 
-        private void openFurnitureActivity(String itemName) {
-            DatabaseReference itemsRef = FirebaseDatabase.getInstance().getReference().child("homes").child(familyId).child("rooms");
-            itemsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        interface OnFurnitureNameRetrievedListener {
+            void onFurnitureNameRetrieved(String furnitureName);
+        }
+
+        interface OnFurnitureIdRetrievedListener {
+            void onFurnitureIdRetrieved(String furnitureId);
+        }
+
+        private void getFurnitureNameById(String furnitureId, String roomId, OnFurnitureNameRetrievedListener listener){
+            DatabaseReference fRef = FirebaseDatabase.getInstance().getReference().
+                    child("HomeDB").child(familyId).child("roomList").
+                    child(roomId).child("furnitureList").child(furnitureId);
+            fRef.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    for (DataSnapshot room : snapshot.getChildren()) {
-                        DataSnapshot fSnapshot = room.child("furnitures");
-                        for (DataSnapshot furniture : fSnapshot.getChildren()) {
-                            DataSnapshot iSnapshot = furniture.child("items");
-                            for (DataSnapshot item : iSnapshot.getChildren()) {
-                                String currentItemName = item.child("name").getValue(String.class);
-                                if (currentItemName != null && currentItemName.equals(itemName)) {
-                                    String roomId = room.getKey();
-                                    String furnitureId = furniture.getKey();
-                                    String furnitureName = "검색 결과가 속한 가구";        //가구 이름이 다른 db 경로를 가지고 있어 경로를 통일하지 않는 이상 사용이 어려움.
-
-                                    Intent intent = new Intent(requireActivity(), FurnitureActivity.class);
-                                    intent.putExtra("familyId", familyId); // familyId 값도 전달
-                                    intent.putExtra("roomId", roomId);
-                                    intent.putExtra("furnitureId", furnitureId);
-                                    intent.putExtra("furnitureName", furnitureName);
-
-                                    startActivity(intent);
-                                    dismiss();
-                                    return;
-                                }
-                            }
-                        }
-                    }
+                    String furnitureName = snapshot.child("name").getValue(String.class);
+                    listener.onFurnitureNameRetrieved(furnitureName);
                 }
 
                 @Override
                 public void onCancelled(@NonNull DatabaseError error) {
-                    Log.e("SearchDialogFragment", "Failed to retrieve item information", error.toException());
+                    Log.e("getFurnitureNameById", "Failed to retrieve furniture name", error.toException());
+                }
+            });
+        }
+
+        private void getFurnitureIdByName(String roomId, String furnitureName, OnFurnitureIdRetrievedListener listener) {
+            DatabaseReference fRef = FirebaseDatabase.getInstance().getReference().
+                    child("HomeDB").child(familyId).child("roomList").
+                    child(roomId).child("furnitureList");
+            fRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    for (DataSnapshot furnitureSnapshot : snapshot.getChildren()) {
+                        if (furnitureSnapshot.child("name").getValue(String.class).equals(furnitureName)) {
+                            listener.onFurnitureIdRetrieved(furnitureSnapshot.getKey());
+                            return;
+                        }
+                    }
+                    listener.onFurnitureIdRetrieved(null);
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    Log.e("SearchDialogFragment", "Failed to retrieve furniture ID", error.toException());
+                }
+            });
+        }
+
+        private String getRoomNameById(String id){
+            for(Map.Entry<String, String> entry : roomMap.entrySet()){
+                if(entry.getValue().equals(id))
+                    return entry.getKey();
+            }
+            return null;
+        }
+
+        private String getRoomIdByName(String name){
+            for(Map.Entry<String, String> entry : roomMap.entrySet()){
+                if(entry.getKey().equals(name))
+                    return entry.getValue();
+            }
+            return null;
+        }
+
+        private void openFurnitureActivity(Product product) {
+            String roomId = getRoomIdByName(product.getRoomName());
+            getFurnitureIdByName(roomId, product.getFurnitureName(), new OnFurnitureIdRetrievedListener() {
+                @Override
+                public void onFurnitureIdRetrieved(String furnitureId) {
+                    String furnitureName = product.getFurnitureName();
+
+                    Intent intent = new Intent(requireActivity(), FurnitureActivity.class);
+                    intent.putExtra("familyId", familyId);
+                    intent.putExtra("roomId", roomId);
+                    intent.putExtra("furnitureId", furnitureId);
+                    intent.putExtra("furnitureName", furnitureName);
+
+                    startActivity(intent);
+                    dismiss();
                 }
             });
         }
 
         @Override
         public boolean onQueryTextSubmit(String query) {
-            searchResultAdapter.getFilter().filter(query);
+            adapter.getFilter().filter(query);
             return false;
         }
 
         @Override
-        public boolean onQueryTextChange(String newText) {
-            searchResultAdapter.getFilter().filter(newText);
+        public boolean onQueryTextChange(String query) {
+            adapter.getFilter().filter(query);
             return false;
         }
     }

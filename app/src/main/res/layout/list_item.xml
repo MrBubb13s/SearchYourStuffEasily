@@ -1,0 +1,35 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="8dp">
+
+    <ImageView
+        android:id="@+id/item_image"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginEnd="8dp"
+        android:src="@drawable/feed" />
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1">
+
+        <TextView
+            android:id="@+id/item_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="물건명"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/item_room_furniture"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="소속된 방 이름 - 가구 이름"
+            android:textSize="12sp"
+            android:textColor="#888888" />
+    </LinearLayout>
+</LinearLayout>

@@ -65,7 +65,7 @@ public class FurnitureActivity extends AppCompatActivity {
     Furniture furniture;
     String furnitureId;
     DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
-    DatabaseReference itemsRef,furnitureRef;
+    DatabaseReference itemsRef, furnitureRef;
     ArrayAdapter<String> adapter;
 
     @Override
@@ -216,7 +216,6 @@ public class FurnitureActivity extends AppCompatActivity {
                 startCameraIntent();
             }
         });
-
         Btn_Register.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -419,7 +418,7 @@ public class FurnitureActivity extends AppCompatActivity {
                 dialog02.dismiss();
             }
         });
-        Btn_Upload.setOnClickListener(new View.OnClickListener() {
+/*        Btn_Upload.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
@@ -431,8 +430,7 @@ public class FurnitureActivity extends AppCompatActivity {
             public void onClick(View view) {
                 startCameraIntent();
             }
-        });
-
+        });     */
     }
 
     private void requestPermissions(){
@@ -466,7 +464,7 @@ public class FurnitureActivity extends AppCompatActivity {
                 Uri selectedImageUri = data.getData();
                 imageViewFurniture.setImageURI(selectedImageUri);
 
-                uploadFurnitureImage(selectedImageUri, currentProductId);
+                uploadProductImage(selectedImageUri, currentProductId);
             } else if (requestCode == REQUEST_IMAGE_CAPTURE) {
                 Bitmap imageBitmap = null;
                 ImageDecoder.Source source = null;
@@ -488,15 +486,15 @@ public class FurnitureActivity extends AppCompatActivity {
                         throw new RuntimeException(e);
                     }
                 }
-                uploadFurnitureImage(imageUri, currentProductId);
+                uploadProductImage(imageUri, currentProductId);
             }
         }
     }
 
-    private void uploadFurnitureImage(Uri imageUri, String productId) {
+    private void uploadProductImage(Uri imageUri, String productId) {
         if (imageUri != null) {
             String imageName = UUID.randomUUID().toString();
-            StorageReference imageRef = storageReference.child("furnitureImages/" + imageName);
+            StorageReference imageRef = storageReference.child("productImages/" + imageName);
 
             imageRef.putFile(imageUri)
                     .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {

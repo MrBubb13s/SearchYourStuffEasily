@@ -1,7 +1,7 @@
 package com.example.searchyourstuffeasily;
 
 public class Food {
-    private String id, name, locationInfo, expirationDate, imageUrl;
+    private String id, fridgeId, name, fridgeName, locationInfo, expirationDate, imageUrl;
     private int count;
 
     public Food() {
@@ -13,7 +13,6 @@ public class Food {
         this.locationInfo = info;
         this.count = count;
         this.expirationDate = expirationDate;
-        this.imageUrl = imageUrl;
     }
 
     public String getId() {
@@ -34,6 +33,12 @@ public class Food {
     public String getImageUrl() {
         return imageUrl;
     }
+    public String getFridgeId() {
+        return fridgeId;
+    }
+    public String getFridgeName() {
+        return fridgeName;
+    }
 
     public void setId(String id) {
         this.id = id;
@@ -52,5 +57,11 @@ public class Food {
     }
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
+    }
+    public void setFridgeId(String id){
+        this.fridgeId = id;
+    }
+    public void setFridgeName(String name){
+        this.fridgeName = name;
     }
 }
