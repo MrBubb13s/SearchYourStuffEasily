@@ -115,6 +115,7 @@ public class FoodActivity extends AppCompatActivity {
         Btn_ImgUpload.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                imageViewFood.setImageURI(null);
                 Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
                 startActivityForResult(intent, REQUEST_IMAGE_PICK);
             }
@@ -122,6 +123,7 @@ public class FoodActivity extends AppCompatActivity {
         Btn_Camera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                imageViewFood.setImageURI(null);
                 startCameraIntent();
             }
         });

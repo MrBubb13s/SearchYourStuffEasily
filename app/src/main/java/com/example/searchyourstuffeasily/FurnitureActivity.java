@@ -79,10 +79,6 @@ public class FurnitureActivity extends AppCompatActivity {
         String roomId = intent.getStringExtra("roomId");
         furnitureId = intent.getStringExtra("furnitureId");
 
-        Log.d("FurnitureActivity", "familyId: " + familyId);
-        Log.d("FurnitureActivity", "roomId: " + roomId);
-        Log.d("FurnitureActivity", "furnitureId: " + furnitureId);
-
         ListView listView_item = (ListView) findViewById(R.id.listview_item);
         Button btn_add_item = (Button) findViewById(R.id.btn_add_item);
         btn_add_item.setOnClickListener(new View.OnClickListener() {
@@ -98,8 +94,6 @@ public class FurnitureActivity extends AppCompatActivity {
             Toast.makeText(this, "물건 이름을 입력해주세요.", Toast.LENGTH_SHORT).show();
             finish(); // 가구 이름이 없으면 액티비티를 종료합니다.
             return;
-        } else if(furnitureName.equals("검색 결과가 속한 가구")){
-            //db 경로를 통해 furnitureId와 동일한 id를 갖는 가구에서 이름을 받아오는 코드를 작성해야 함.
         }
 
         getSupportActionBar().setTitle(furnitureName);

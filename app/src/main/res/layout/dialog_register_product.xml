@@ -12,8 +12,7 @@
         android:layout_gravity="center"
         android:gravity="center"
         android:background="@drawable/rounded_corner_white"
-        android:padding="40dp"
-        android:scrollbars="vertical">
+        android:padding="40dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -23,89 +22,97 @@
             android:scrollbars="vertical">
 
             <FrameLayout
-            android:layout_width="250dp"
-            android:layout_height="250dp"
-            android:background="@drawable/edit_bg">
+                android:layout_width="250dp"
+                android:layout_height="250dp"
+                android:background="@drawable/edit_bg">
 
-            <ImageView
-                android:id="@+id/imageViewFurniture"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:scaleType="centerCrop"
-                android:src="@drawable/edit_bg" />
+                <ImageView
+                    android:id="@+id/imageViewFurniture"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/edit_bg" />
 
-            <Button
-                android:id="@+id/buttonUpload"
+                <Button
+                    android:id="@+id/buttonUpload"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="이미지 업로드"
+                    android:layout_gravity="bottom|start"
+                    android:layout_margin="10dp"
+                    android:background="@drawable/rounded_corner_blue"
+                    android:textColor="#fff" />
+
+                <Button
+                    android:id="@+id/buttonCamera"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="사진 촬영"
+                    android:layout_gravity="bottom|end"
+                    android:layout_margin="10dp"
+                    android:background="@drawable/rounded_corner_blue"
+                    android:textColor="#fff" />
+
+            </FrameLayout>
+
+            <EditText
+                android:id="@+id/nameInput2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="이미지 업로드"
-                android:layout_gravity="bottom|start"
-                android:layout_margin="10dp"
-                android:background="@drawable/rounded_corner_blue"
-                android:textColor="#fff" />
+                android:textAlignment="center"
+                android:layout_marginVertical="10dp"
+                android:hint="제품명"
+                android:textSize="15sp"
+                android:width="300dp"
+                android:textColor="#000"
+                android:textColorHint="#D3D3D3"
+                android:backgroundTint="@android:color/black"/>
 
-            <Button
-                android:id="@+id/buttonCamera"
+            <EditText
+                android:id="@+id/infoInput2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="사진 촬영"
-                android:layout_gravity="bottom|end"
+                android:layout_marginVertical="20dp"
+                android:width="300dp"
+                android:hint="상세 위치 정보"
+                android:textAlignment="center"
+                android:textSize="15sp"
+                android:textColor="#000"
+                android:textColorHint="#D3D3D3"
+                android:backgroundTint="@android:color/black"/>
+
+            <EditText
+                android:id="@+id/countInput2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginVertical="20dp"
+                android:width="300dp"
+                android:hint="수량"
+                android:textAlignment="center"
+                android:textSize="15sp"
+                android:textColor="#000"
+                android:textColorHint="#D3D3D3"
+                android:backgroundTint="@android:color/black" />
+
+            <Button
+                android:id="@+id/ActiveButton2"
+                android:layout_width="250dp"
+                android:layout_height="wrap_content"
+                android:text="등록"
+                android:textColor="#fff"
+                android:textStyle="bold"
+                android:layout_marginVertical="10dp"
+                android:background="@drawable/rounded_corner_blue" />
+
+            <Button
+                android:id="@+id/CloseButton2"
+                android:layout_width="250dp"
+                android:layout_height="wrap_content"
                 android:layout_margin="10dp"
                 android:background="@drawable/rounded_corner_blue"
-                android:textColor="#fff" />
-
-        </FrameLayout>
-
-            <EditText
-            android:id="@+id/nameInput2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAlignment="center"
-            android:layout_marginVertical="10dp"
-            android:hint="제품명"
-            android:textSize="15sp"
-            android:width="300dp"
-            android:textColor="#000" />
-
-            <EditText
-            android:id="@+id/infoInput2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginVertical="20dp"
-            android:width="300dp"
-            android:hint="상세 위치 정보"
-            android:textAlignment="center"
-            android:textSize="15sp" />
-
-            <EditText
-            android:id="@+id/countInput2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginVertical="20dp"
-            android:width="300dp"
-            android:hint="수량"
-            android:textAlignment="center"
-            android:textSize="15sp" />
-
-            <Button
-            android:id="@+id/ActiveButton2"
-            android:layout_width="250dp"
-            android:layout_height="wrap_content"
-            android:text="등록"
-            android:textColor="#fff"
-            android:textStyle="bold"
-            android:layout_marginVertical="10dp"
-            android:background="@drawable/rounded_corner_blue" />
-
-            <Button
-            android:id="@+id/CloseButton2"
-            android:layout_width="250dp"
-            android:layout_height="wrap_content"
-            android:layout_margin="10dp"
-            android:background="@drawable/rounded_corner_blue"
-            android:text="취소"
-            android:textColor="#fff"
-            android:textStyle="bold" />
+                android:text="취소"
+                android:textColor="#fff"
+                android:textStyle="bold" />
         </LinearLayout>
     </LinearLayout>
 </FrameLayout>
