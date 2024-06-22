@@ -1,6 +1,7 @@
 package com.example.searchyourstuffeasily;
 
 import android.content.Context;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,6 +15,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.bumptech.glide.Glide;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,6 +50,7 @@ public class CustomAdapterFood extends ArrayAdapter<Food> implements Filterable 
 
         foodName.setText(food.getName());
         foodLocation.setText(food.getFridgeName());
+
         if (food.getImageUrl() != null && !food.getImageUrl().isEmpty())
             Glide.with(context).load(food.getImageUrl()).into(foodImage);
         else

@@ -1,6 +1,7 @@
 package com.example.searchyourstuffeasily;
 
 import android.content.Context;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,6 +15,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.bumptech.glide.Glide;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,6 +57,7 @@ public class CustomAdapter extends ArrayAdapter<Product> implements Filterable {
          else
             itemLocation.setText("Unknown Room - Unknown Furniture");
 
+         //해당 코드를 위해 uploadImage 메서드가 db에 imageUrl을 저장함.
         if (product.getImageUrl() != null && !product.getImageUrl().isEmpty())
             Glide.with(context).load(product.getImageUrl()).into(itemImage);
          else

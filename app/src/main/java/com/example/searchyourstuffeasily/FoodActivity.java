@@ -18,6 +18,7 @@ import android.app.Dialog;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.ImageDecoder;
@@ -72,13 +73,13 @@ public class FoodActivity extends AppCompatActivity {
     Button dateset;
     DatePickerDialog datePickerDialog;
     Refrigerator Fridge;
-    private String fridgeId, currentFoodId;
+    private String fridgeId;
     private DatabaseReference fridgeRef;
     private ListView listView;
     private ArrayAdapter<String> listViewAdapter;
     private static final int REQUEST_IMAGE_PICK = 1;
     private static final int REQUEST_IMAGE_CAPTURE = 2;
-    private Uri imageUri;
+    private Uri imageUri, currentImageUri;
     private StorageReference storageRef;
     private ImageView imageViewFood;
 
@@ -115,7 +116,6 @@ public class FoodActivity extends AppCompatActivity {
         Btn_ImgUpload.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                imageViewFood.setImageURI(null);
                 Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
                 startActivityForResult(intent, REQUEST_IMAGE_PICK);
             }
@@ -123,7 +123,6 @@ public class FoodActivity extends AppCompatActivity {
         Btn_Camera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                imageViewFood.setImageURI(null);
                 startCameraIntent();
             }
         });
@@ -241,10 +240,6 @@ public class FoodActivity extends AppCompatActivity {
     }
 
     public void showDialogRegister() {
-        if (dialog01 == null) {
-            Log.e("FoodActivity", "dialog01 is null");
-            return;
-        }
         dialog01.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         dialog01.show();
 
@@ -262,6 +257,8 @@ public class FoodActivity extends AppCompatActivity {
         nameInput.getText().clear();
         InfoInput.getText().clear();
         countInput.getText().clear();
+        imageViewFood.setImageResource(0);
+        currentImageUri = null;
 
         Btn_Register.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -293,7 +290,10 @@ public class FoodActivity extends AppCompatActivity {
                 }
 
                 Food food = new Food(UUID.randomUUID().toString(), foodName, foodLocation, count, expirationDate);
-                currentFoodId = food.getId();
+
+                //새로 생성한 food의 id 값으로 (이미지 업로드나 카메라를 클릭한 경우) 현재 저장된 이미지의 Uri를 storage에 저장함.
+                if(currentImageUri != null)
+                    uploadFoodImage(currentImageUri, food.getId());
 
                 Map<String, Object> foodData = new HashMap<>();
                 foodData.put("name", foodName);
@@ -333,6 +333,7 @@ public class FoodActivity extends AppCompatActivity {
                 nameInput.getText().clear();
                 InfoInput.getText().clear();
                 countInput.getText().clear();
+                imageViewFood.setImageResource(0);
                 dialog01.dismiss();
             }
         });
@@ -342,6 +343,7 @@ public class FoodActivity extends AppCompatActivity {
                 nameInput.getText().clear();
                 InfoInput.getText().clear();
                 countInput.getText().clear();
+                imageViewFood.setImageResource(0);
                 dialog01.dismiss();
             }
         });
@@ -359,7 +361,6 @@ public class FoodActivity extends AppCompatActivity {
         initDatePicker();
         Food food = Fridge.getFoodByIndex(index);
         final String itemId = food.getId();
-        currentFoodId = itemId;
         if(itemId == null) {
             Log.e("FoodActivity", "검색한 음식 또는 음식의 아이디가 null입니다.");
             return;
@@ -369,11 +370,11 @@ public class FoodActivity extends AppCompatActivity {
         EditText PosInput = dialog01.findViewById(R.id.infoInput1);
         EditText CountInput = dialog01.findViewById(R.id.countInput1);
         dateset = dialog01.findViewById(R.id.expirationDate1);
-        imageViewFood = dialog01.findViewById(R.id.imageViewFood);
 
         NameInput.getText().clear();
         PosInput.getText().clear();
         CountInput.getText().clear();
+        imageViewFood.setImageResource(0);
 
         NameInput.setText(food.getName());
         PosInput.setText(food.getLocationInfo());
@@ -386,11 +387,13 @@ public class FoodActivity extends AppCompatActivity {
             @Override
             public void onSuccess(Uri uri) {
                 String imageUrl = uri.toString();
+                currentImageUri = uri;
                 Glide.with(FoodActivity.this).load(imageUrl).into(imageViewFood);
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
+                currentImageUri = null;
                 imageViewFood.setImageResource(R.drawable.add_image_512); // 디폴트 이미지 설정
             }
         });
@@ -413,6 +416,9 @@ public class FoodActivity extends AppCompatActivity {
                 foodUpdates.put("count", changedCount);
                 foodUpdates.put("info", changedInfo);
                 foodUpdates.put("date", dateset.getText().toString());
+
+                if(currentImageUri != null)
+                    uploadFoodImage(currentImageUri, itemId);
 
                 fridgeRef.child("foodList").child(itemId).updateChildren(foodUpdates)
                         .addOnSuccessListener(new OnSuccessListener<Void>() {
@@ -441,6 +447,7 @@ public class FoodActivity extends AppCompatActivity {
                 NameInput.getText().clear();
                 PosInput.getText().clear();
                 CountInput.getText().clear();
+                imageViewFood.setImageResource(0);
                 dialog01.dismiss();
             }
         });
@@ -467,6 +474,7 @@ public class FoodActivity extends AppCompatActivity {
                 NameInput.getText().clear();
                 PosInput.getText().clear();
                 CountInput.getText().clear();
+                imageViewFood.setImageResource(0);
                 dialog01.dismiss();
             }
         });
@@ -488,6 +496,7 @@ public class FoodActivity extends AppCompatActivity {
                                     Log.d("FoodActivity", "Food deleted successfully");
                                     Fridge.getFlist().remove(food);
                                     listViewAdapter.notifyDataSetChanged();
+                                    imageViewFood.setImageResource(0);
                                     onResume(); // 리스트뷰 갱신을 위해 onResume() 호출
                                 }
                             })
@@ -580,30 +589,28 @@ public class FoodActivity extends AppCompatActivity {
 
     private void uploadFoodImage(Uri imageUri, String foodId) {
         if (imageUri != null) {
-            String imageName = foodId;
-            StorageReference imageRef = storageRef.child("foodImages/" + imageName);
-
+            StorageReference imageRef = storageRef.child("foodImages/" + foodId);
             imageRef.putFile(imageUri)
                     .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                         @Override
                         public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                            // 이미지 업로드 성공
+                            // 이미지 업로드 성공   //imageUrl 값을 fridgeRef에 저장하지 않아도 customAdapter 검색을 제외하곤 이상없음.
                             imageRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                                @Override
-                                public void onSuccess(Uri uri) {
-                                    String downloadUrl = uri.toString();
-                                    fridgeRef.child("foodList").child(foodId).child("imageUrl").setValue(downloadUrl)
-                                            .addOnCompleteListener(new OnCompleteListener<Void>() {
-                                                @Override
-                                                public void onComplete(@NonNull Task<Void> task) {
-                                                    if(task.isSuccessful())
-                                                        Toast.makeText(FoodActivity.this, "이미지 업로드 성공", Toast.LENGTH_SHORT).show();
-                                                    else
-                                                        Toast.makeText(FoodActivity.this, "이미지 업로드 실패", Toast.LENGTH_SHORT).show();
-                                                }
-                                            });
-                                }
-                            });
+                                    @Override
+                                    public void onSuccess(Uri uri) {
+                                        String downloadUrl = uri.toString();
+                                        fridgeRef.child("foodList").child(foodId).child("imageUrl").setValue(downloadUrl)
+                                                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                    @Override
+                                                    public void onComplete(@NonNull Task<Void> task) {
+                                                        if(task.isSuccessful())
+                                                            Toast.makeText(FoodActivity.this, "이미지 업로드 성공", Toast.LENGTH_SHORT).show();
+                                                        else
+                                                            Toast.makeText(FoodActivity.this, "이미지 업로드 실패", Toast.LENGTH_SHORT).show();
+                                                    }
+                                                });
+                                    }
+                                });
                         }
                     })
                     .addOnFailureListener(new OnFailureListener() {
@@ -617,7 +624,7 @@ public class FoodActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onResume() {         //상세 위치 정보가 제대로 나오지 않는 원인일 수 있음, RoomActivity에는 존재하나 FurnitureActivity에는 존재하지 않음. 그럼에도 FurnitureActivity는 멀쩡하게 동작함.
+    protected void onResume() {
         super.onResume();
         
         // Firebase에서 최신 정보 가져오기
@@ -696,8 +703,10 @@ public class FoodActivity extends AppCompatActivity {
             if (requestCode == REQUEST_IMAGE_PICK) {
                 Uri selectedImageUri = data.getData();
                 imageViewFood.setImageURI(selectedImageUri);
-
-                uploadFoodImage(selectedImageUri, currentFoodId);
+                
+                //이미지 업로드 성공 후 업로드한 이미지가 올바른 음식에 저장하기 위해 음식 등록/변경이 호출될 때만 uploadImageFood를 호출하도록 변경함.
+                //대신 현재 업로드 된 이미지의 Uri값을 가지고 있도록 currentImageUri에 입력
+                currentImageUri = selectedImageUri;
             } else if (requestCode == REQUEST_IMAGE_CAPTURE) {
                 Bitmap imageBitmap = null;
                 ImageDecoder.Source source = null;
@@ -719,7 +728,9 @@ public class FoodActivity extends AppCompatActivity {
                         throw new RuntimeException(e);
                     }
                 }
-                uploadFoodImage(imageUri, currentFoodId);
+                //이미지 업로드 성공 후 업로드한 이미지가 올바른 음식에 저장하기 위해 음식 등록/변경이 호출될 때만 uploadImageFood를 호출하도록 변경함.
+                //대신 현재 업로드 된 이미지의 Uri값을 가지고 있도록 currentImageUri에 입력
+                currentImageUri = imageUri;
             }
         }
     }

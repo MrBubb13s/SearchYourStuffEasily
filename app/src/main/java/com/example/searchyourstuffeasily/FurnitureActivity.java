@@ -18,7 +18,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -58,10 +57,9 @@ public class FurnitureActivity extends AppCompatActivity {
     private Dialog dialog01, dialog02;
     private static final int REQUEST_IMAGE_PICK = 1;
     private static final int REQUEST_IMAGE_CAPTURE = 2;
-    private StorageReference storageReference;
+    private StorageReference storageRef;
     private ImageView imageViewFurniture;
-    private Uri imageUri;
-    private String currentProductId;
+    private Uri imageUri, currentImageUri;
     Furniture furniture;
     String furnitureId;
     DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
@@ -107,12 +105,31 @@ public class FurnitureActivity extends AppCompatActivity {
         dialog02.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog02.setContentView(R.layout.dialog_register_product);
 
-        // Firebase Realtime Database 경로 설정
-        //가구와 물건이 별개의 db 경로를 가짐. 가구 내에 물건을 저장하도록 db를 수정하려면 itemsRef로 지정된 경로를 모두 furnitureRef로 변경해야함.
+        //dialog상의 내용을 onCreate에서 우선 처리
+        imageViewFurniture = dialog02.findViewById(R.id.imageViewFurniture);
+        Button Btn_Upload = dialog02.findViewById(R.id.buttonUpload);
+        Button Btn_Camera = dialog02.findViewById(R.id.buttonCamera);
+
+        Btn_Upload.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                startActivityForResult(intent, REQUEST_IMAGE_PICK);
+            }
+        });
+        Btn_Camera.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startCameraIntent();
+            }
+        });
+
+        // Firebase Realtime Database 경로 설정     //가구와 물건은 별개의 db 경로를 가짐.
         itemsRef = mDatabase.child("homes").child(familyId).child("rooms").child(roomId)
                 .child("furnitures").child(furnitureId).child("items");
         furnitureRef = mDatabase.child("HomeDB").child(familyId).child("roomList").child(roomId)
                 .child("furnitureList").child(furnitureId);
+        storageRef = FirebaseStorage.getInstance().getReference();
 
         // ListView, Adapter 생성 및 연결
         adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, android.R.id.text1);
@@ -180,7 +197,6 @@ public class FurnitureActivity extends AppCompatActivity {
     }
 
     public void showDialogRegister() {
-        dialog02.setContentView(R.layout.dialog_register_product);
         dialog02.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         dialog02.show();
 
@@ -188,28 +204,16 @@ public class FurnitureActivity extends AppCompatActivity {
         EditText positionInput = dialog02.findViewById(R.id.infoInput2);
         EditText countInput = dialog02.findViewById(R.id.countInput2);
 
-        imageViewFurniture = dialog02.findViewById(R.id.imageViewFurniture);
-        storageReference = FirebaseStorage.getInstance().getReference();
-
         Button Btn_Register = dialog02.findViewById(R.id.ActiveButton2);
         Button Btn_Close = dialog02.findViewById(R.id.CloseButton2);
-        Button Btn_Upload = dialog02.findViewById(R.id.buttonUpload);
-        Button Btn_Camera = dialog02.findViewById(R.id.buttonCamera);
         Btn_Register.setText("추가");
 
-        Btn_Upload.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                startActivityForResult(intent, REQUEST_IMAGE_PICK);
-            }
-        });
-        Btn_Camera.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startCameraIntent();
-            }
-        });
+        nameInput.getText().clear();
+        positionInput.getText().clear();
+        countInput.getText().clear();
+        imageViewFurniture.setImageResource(0);
+        currentImageUri = null;
+
         Btn_Register.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -238,10 +242,12 @@ public class FurnitureActivity extends AppCompatActivity {
                     }
                 }
 
-                String productId = UUID.randomUUID().toString();
-                currentProductId = productId;
+                Product product = new Product(UUID.randomUUID().toString(), itemName, itemPosition, itemCount);
+                String productId = product.getId();
 
-                Product product = new Product(productId, itemName, itemPosition, itemCount);
+                //이미지가 업로드되어 있으면 해당 이미지를 product의 id값으로 storage에 저장
+                if(currentImageUri != null)
+                    uploadProductImage(currentImageUri, productId);
 
                 Map<String, Object> itemData = new HashMap<>();
                 itemData.put("name", itemName);
@@ -280,6 +286,7 @@ public class FurnitureActivity extends AppCompatActivity {
                 nameInput.getText().clear();
                 positionInput.getText().clear();
                 countInput.getText().clear();
+                imageViewFurniture.setImageResource(0);
                 dialog02.dismiss();
             }
         });
@@ -289,6 +296,7 @@ public class FurnitureActivity extends AppCompatActivity {
                 nameInput.getText().clear();
                 positionInput.getText().clear();
                 countInput.getText().clear();
+                imageViewFurniture.setImageResource(0);
                 dialog02.dismiss();
             }
         });
@@ -305,7 +313,7 @@ public class FurnitureActivity extends AppCompatActivity {
         Btn_Delete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                itemsRef.removeValue()          //원래는 itemsRef와 furnituresRef 둘 다 removeValue를 호출하고 아래 리스너들은 furnitureRef에 연결되어있었음.
+                itemsRef.removeValue()
                         .addOnSuccessListener(new OnSuccessListener<Void>() {
                             @Override
                             public void onSuccess(Void aVoid) {
@@ -319,6 +327,7 @@ public class FurnitureActivity extends AppCompatActivity {
                                 Toast.makeText(FurnitureActivity.this, "가구 삭제에 실패했습니다.", Toast.LENGTH_SHORT).show();
                             }
                         });
+                imageViewFurniture.setImageResource(0);
                 dialog01.dismiss();
             }
         });
@@ -332,36 +341,31 @@ public class FurnitureActivity extends AppCompatActivity {
         EditText nameInput = dialog02.findViewById(R.id.nameInput2);
         EditText positionInput = dialog02.findViewById(R.id.infoInput2);
         EditText countInput = dialog02.findViewById(R.id.countInput2);
-        imageViewFurniture = dialog02.findViewById(R.id.imageViewFurniture);
-        currentProductId = product.getId();
 
         nameInput.setText(product.getName());
         positionInput.setText(product.getLocationInfo());
         countInput.setText(String.valueOf(product.getCount()));
         String itemId = product.getId();
 
-        // 이미지 URL 가져오기
-        itemsRef.child(itemId).child("imageUrl")
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        String imageUrl = dataSnapshot.getValue(String.class);
-                        if (imageUrl != null && !imageUrl.isEmpty())
-                            Glide.with(FurnitureActivity.this).load(imageUrl).into(imageViewFurniture);
-                        else
-                            imageViewFurniture.setImageResource(R.drawable.add_image_512); // 디폴트 이미지 설정
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-                        imageViewFurniture.setImageResource(R.drawable.add_image_512); // 디폴트 이미지 설정
-                    }
-                });
-
+        //FoodActivity의 사진 가져오기 로직과 통일
+        StorageReference imageRef = storageRef.child("productImages/" + itemId);
+        imageRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+            @Override
+            public void onSuccess(Uri uri) {
+                String imageUrl = uri.toString();
+                currentImageUri = uri;
+                Glide.with(FurnitureActivity.this).load(imageUrl).into(imageViewFurniture);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                currentImageUri = null;
+                imageViewFurniture.setImageResource(R.drawable.add_image_512); // 디폴트 이미지 설정
+            }
+        });
+        
         Button Btn_Change = dialog02.findViewById(R.id.ActiveButton2);
         Button Btn_Delete = dialog02.findViewById(R.id.CloseButton2);
-        Button Btn_Upload = dialog02.findViewById(R.id.buttonUpload);
-        Button Btn_Camera = dialog02.findViewById(R.id.buttonCamera);
         Btn_Change.setText("변경");
         Btn_Delete.setText("삭제");
 
@@ -371,11 +375,14 @@ public class FurnitureActivity extends AppCompatActivity {
                 String changedName = nameInput.getText().toString();
                 String changedInfo = positionInput.getText().toString();
                 int changedCount = Integer.parseInt(countInput.getText().toString());
-                Map<String, Object> itemMap = new HashMap<String, Object>();
 
+                Map<String, Object> itemMap = new HashMap<String, Object>();
                 itemMap.put("name", changedName);
                 itemMap.put("count", changedCount);
                 itemMap.put("info", changedInfo);
+
+                if(currentImageUri != null)
+                    uploadProductImage(currentImageUri, itemId);
 
                 itemsRef.child(itemId).updateChildren(itemMap)
                         .addOnSuccessListener(new OnSuccessListener<Void>() {
@@ -390,6 +397,11 @@ public class FurnitureActivity extends AppCompatActivity {
                                 Toast.makeText(FurnitureActivity.this, "물건 정보 변경에 실패했습니다.", Toast.LENGTH_SHORT).show();
                             }
                         });
+
+                nameInput.getText().clear();
+                positionInput.getText().clear();
+                countInput.getText().clear();
+                imageViewFurniture.setImageResource(0);
                 dialog02.dismiss();
             }
         });
@@ -409,22 +421,14 @@ public class FurnitureActivity extends AppCompatActivity {
                                 Toast.makeText(FurnitureActivity.this, "물건 삭제에 실패했습니다.", Toast.LENGTH_SHORT).show();
                             }
                         });
+                
+                nameInput.getText().clear();
+                positionInput.getText().clear();
+                countInput.getText().clear();
+                imageViewFurniture.setImageResource(0);
                 dialog02.dismiss();
             }
         });
-/*        Btn_Upload.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                startActivityForResult(intent, REQUEST_IMAGE_PICK);
-            }
-        });
-        Btn_Camera.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startCameraIntent();
-            }
-        });     */
     }
 
     private void requestPermissions(){
@@ -458,7 +462,7 @@ public class FurnitureActivity extends AppCompatActivity {
                 Uri selectedImageUri = data.getData();
                 imageViewFurniture.setImageURI(selectedImageUri);
 
-                uploadProductImage(selectedImageUri, currentProductId);
+                currentImageUri = selectedImageUri;
             } else if (requestCode == REQUEST_IMAGE_CAPTURE) {
                 Bitmap imageBitmap = null;
                 ImageDecoder.Source source = null;
@@ -480,21 +484,19 @@ public class FurnitureActivity extends AppCompatActivity {
                         throw new RuntimeException(e);
                     }
                 }
-                uploadProductImage(imageUri, currentProductId);
+                currentImageUri = imageUri;
             }
         }
     }
 
     private void uploadProductImage(Uri imageUri, String productId) {
         if (imageUri != null) {
-            String imageName = UUID.randomUUID().toString();
-            StorageReference imageRef = storageReference.child("productImages/" + imageName);
-
+            StorageReference imageRef = storageRef.child("productImages/" + productId);
             imageRef.putFile(imageUri)
                     .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                         @Override
                         public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                            // 이미지 업로드 성공
+                            // 이미지 업로드 성공       //customAdapter의 검색 기능에서 이미지를 표시하기 위해 itemsRef에 imageUrl 저장
                             imageRef.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                                 @Override
                                 public void onSuccess(Uri uri) {
