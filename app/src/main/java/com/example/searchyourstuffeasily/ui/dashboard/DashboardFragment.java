@@ -16,7 +16,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -56,7 +55,7 @@ import java.util.UUID;
 
 public class DashboardFragment extends Fragment {
     private String familyId;
-    private Dialog dialog01, dialog02, dialog03;
+    private Dialog dialog01;
     DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
     DatabaseReference conditionRef;
     HashMap<String, String> fridgeMap = new HashMap<String, String>();
@@ -71,14 +70,6 @@ public class DashboardFragment extends Fragment {
         dialog01 = new Dialog(getActivity());
         dialog01.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog01.setContentView(R.layout.dialog_register_refrigerator);
-
-        dialog02 = new Dialog(getActivity());
-        dialog02.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog02.setContentView(R.layout.dialog_confirm_delete);
-
-        dialog03 = new Dialog(getActivity());
-        dialog03.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog03.setContentView(R.layout.dialog_all_purpose);
 
         familyData = (GlobalVariable) getActivity().getApplicationContext();
         String userId;

@@ -304,11 +304,7 @@ public class FurnitureActivity extends AppCompatActivity {
 
     public void showDialogDelete() {
         dialog01.show();
-        TextView Txt_Message = dialog01.findViewById(R.id.Confirm_Del_Text);
         Button Btn_Delete = dialog01.findViewById(R.id.Confirm_Del_Button);
-
-        Txt_Message.setTextSize(20);
-        Txt_Message.setText("해당 가구를 삭제하시겠습니까?");
 
         Btn_Delete.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -327,7 +323,6 @@ public class FurnitureActivity extends AppCompatActivity {
                                 Toast.makeText(FurnitureActivity.this, "가구 삭제에 실패했습니다.", Toast.LENGTH_SHORT).show();
                             }
                         });
-                imageViewFurniture.setImageResource(0);
                 dialog01.dismiss();
             }
         });

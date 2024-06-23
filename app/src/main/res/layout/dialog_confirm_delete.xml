@@ -19,6 +19,7 @@
             android:layout_height="wrap_content"
             android:textSize="30sp"
             android:id="@+id/Confirm_Del_Text"
+            android:text="삭제 하시겠습니까?"
             android:gravity="center"
             android:textColorHint="#D3D3D3"
             android:backgroundTint="@android:color/black" />
