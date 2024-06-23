@@ -5,8 +5,6 @@ import android.app.Dialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
@@ -27,6 +25,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.bumptech.glide.Glide;
 import com.example.searchyourstuffeasily.GlobalVariable;
 import com.example.searchyourstuffeasily.LoginActivity;
 import com.example.searchyourstuffeasily.R;
@@ -39,12 +38,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import static android.content.Context.CLIPBOARD_SERVICE;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URI;
-import java.net.URL;
 
 public class NotificationsFragment extends Fragment {
     private Button Btn_PartIn;
@@ -96,9 +89,9 @@ public class NotificationsFragment extends Fragment {
             else
                 email.setText("이메일 없음");
 
-            //if(userPhoto != null)
-            //    profile.setImageURI(userPhoto);
-            //else
+            if(userPhoto != null)
+                Glide.with(this).load(userPhoto).into(profile);
+            else
                 profile.setImageResource(R.drawable.ic_launcher_new);
 
             DatabaseReference userRef = mDatabase.child("users").child(uid);
@@ -108,9 +101,9 @@ public class NotificationsFragment extends Fragment {
                     if (snapshot.exists()) {
                         familyId = snapshot.getValue(String.class);
                         familyData.setfamilyId(familyId);
-                        if (familyId != null) {
+                        if (familyId != null)
                             textView.setText(familyId);
-                        } else {
+                        else {
                             Log.e("NotificationsFragment", "Family ID is null");
                             textView.setText("가족 코드가 없습니다.");
                         }
@@ -119,7 +112,6 @@ public class NotificationsFragment extends Fragment {
                         familyData.setfamilyId(null);
                         textView.setText("가족 코드가 없습니다.");
                     }
-
                 }
 
                 @Override
@@ -241,7 +233,6 @@ public class NotificationsFragment extends Fragment {
     }
 
     private void showInvalidFamilyCodeDialog() {
-        // 유효하지 않은 가족 코드 입력 시 보여줄 대화상자 구현
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setMessage("유효하지 않은 가족 코드입니다. 다시 확인해주세요.")
                 .setPositiveButton("확인", null);

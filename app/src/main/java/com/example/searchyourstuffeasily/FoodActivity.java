@@ -154,6 +154,8 @@ public class FoodActivity extends AppCompatActivity {
                 if (food != null) {
                     food.setId(snapshot.getKey());
                     food.setImageUrl(snapshot.child("imageUrl").getValue(String.class));
+                    food.setLocationInfo(snapshot.child("info").getValue(String.class));
+                    food.setExpirationDate(snapshot.child("date").getValue(String.class));
                     Fridge.addFood(food);
 
                     listViewAdapter.add(food.getName());
@@ -169,6 +171,8 @@ public class FoodActivity extends AppCompatActivity {
                 if (updatedFood != null) {
                     updatedFood.setId(foodId);
                     updatedFood.setImageUrl(snapshot.child("imageUrl").getValue(String.class));
+                    updatedFood.setLocationInfo(snapshot.child("info").getValue(String.class));
+                    updatedFood.setExpirationDate(snapshot.child("date").getValue(String.class));
                     for (int i = 0; i < Fridge.getFlistSize(); i++) {
                         Food food = Fridge.getFoodByIndex(i);
                         if (food != null && food.getId() != null && food.getId().equals(foodId)) {

@@ -19,7 +19,9 @@
             android:layout_height="wrap_content"
             android:textSize="30sp"
             android:id="@+id/Confirm_Del_Text"
-            android:gravity="center"/>
+            android:gravity="center"
+            android:textColorHint="#D3D3D3"
+            android:backgroundTint="@android:color/black" />
 
         <LinearLayout
             android:layout_width="match_parent"
