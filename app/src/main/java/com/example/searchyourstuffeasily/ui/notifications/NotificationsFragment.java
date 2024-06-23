@@ -83,7 +83,7 @@ public class NotificationsFragment extends Fragment {
             // 사용자 정보 가져오기
             String userName = user.getDisplayName();
             String userEmail = user.getEmail();
-            Uri userPhoto = user.getPhotoUrl();
+            Uri userPhoto = user.getPhotoUrl(); //사용자의 이미지 Uri를 저장
 
             // 사용자 정보 설정
             if (userName != null)
@@ -96,9 +96,9 @@ public class NotificationsFragment extends Fragment {
             else
                 email.setText("이메일 없음");
 
-            if(userPhoto != null)
-                profile.setImageURI(userPhoto);
-            else
+            //if(userPhoto != null)
+            //    profile.setImageURI(userPhoto);
+            //else
                 profile.setImageResource(R.drawable.ic_launcher_new);
 
             DatabaseReference userRef = mDatabase.child("users").child(uid);

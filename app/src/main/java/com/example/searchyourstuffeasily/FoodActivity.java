@@ -370,6 +370,7 @@ public class FoodActivity extends AppCompatActivity {
         EditText PosInput = dialog01.findViewById(R.id.infoInput1);
         EditText CountInput = dialog01.findViewById(R.id.countInput1);
         dateset = dialog01.findViewById(R.id.expirationDate1);
+        Uri compareUri = currentImageUri;
 
         NameInput.getText().clear();
         PosInput.getText().clear();
@@ -417,7 +418,7 @@ public class FoodActivity extends AppCompatActivity {
                 foodUpdates.put("info", changedInfo);
                 foodUpdates.put("date", dateset.getText().toString());
 
-                if(currentImageUri != null)
+                if(currentImageUri != null && currentImageUri != compareUri)
                     uploadFoodImage(currentImageUri, itemId);
 
                 fridgeRef.child("foodList").child(itemId).updateChildren(foodUpdates)

@@ -346,6 +346,7 @@ public class FurnitureActivity extends AppCompatActivity {
         positionInput.setText(product.getLocationInfo());
         countInput.setText(String.valueOf(product.getCount()));
         String itemId = product.getId();
+        Uri compareUri = currentImageUri;
 
         //FoodActivity의 사진 가져오기 로직과 통일
         StorageReference imageRef = storageRef.child("productImages/" + itemId);
@@ -381,7 +382,7 @@ public class FurnitureActivity extends AppCompatActivity {
                 itemMap.put("count", changedCount);
                 itemMap.put("info", changedInfo);
 
-                if(currentImageUri != null)
+                if(currentImageUri != null && currentImageUri != compareUri)
                     uploadProductImage(currentImageUri, itemId);
 
                 itemsRef.child(itemId).updateChildren(itemMap)
