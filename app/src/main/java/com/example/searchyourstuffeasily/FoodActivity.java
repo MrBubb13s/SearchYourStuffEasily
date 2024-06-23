@@ -257,7 +257,7 @@ public class FoodActivity extends AppCompatActivity {
         nameInput.getText().clear();
         InfoInput.getText().clear();
         countInput.getText().clear();
-        imageViewFood.setImageResource(0);
+        imageViewFood.setImageResource(R.drawable.add_image_512);
         currentImageUri = null;
 
         Btn_Register.setOnClickListener(new View.OnClickListener() {
@@ -370,12 +370,11 @@ public class FoodActivity extends AppCompatActivity {
         EditText PosInput = dialog01.findViewById(R.id.infoInput1);
         EditText CountInput = dialog01.findViewById(R.id.countInput1);
         dateset = dialog01.findViewById(R.id.expirationDate1);
-        Uri compareUri = currentImageUri;
 
         NameInput.getText().clear();
         PosInput.getText().clear();
         CountInput.getText().clear();
-        imageViewFood.setImageResource(0);
+        currentImageUri = null;
 
         NameInput.setText(food.getName());
         PosInput.setText(food.getLocationInfo());
@@ -388,13 +387,11 @@ public class FoodActivity extends AppCompatActivity {
             @Override
             public void onSuccess(Uri uri) {
                 String imageUrl = uri.toString();
-                currentImageUri = uri;
                 Glide.with(FoodActivity.this).load(imageUrl).into(imageViewFood);
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                currentImageUri = null;
                 imageViewFood.setImageResource(R.drawable.add_image_512); // 디폴트 이미지 설정
             }
         });
@@ -418,7 +415,7 @@ public class FoodActivity extends AppCompatActivity {
                 foodUpdates.put("info", changedInfo);
                 foodUpdates.put("date", dateset.getText().toString());
 
-                if(currentImageUri != null && currentImageUri != compareUri)
+                if(currentImageUri != null)
                     uploadFoodImage(currentImageUri, itemId);
 
                 fridgeRef.child("foodList").child(itemId).updateChildren(foodUpdates)
@@ -706,7 +703,7 @@ public class FoodActivity extends AppCompatActivity {
                 imageViewFood.setImageURI(selectedImageUri);
                 
                 //이미지 업로드 성공 후 업로드한 이미지가 올바른 음식에 저장하기 위해 음식 등록/변경이 호출될 때만 uploadImageFood를 호출하도록 변경함.
-                //대신 현재 업로드 된 이미지의 Uri값을 가지고 있도록 currentImageUri에 입력
+                //대신 현재 업로드 된 이미지의 Uri값을 가지고 있도록 currentImageUri에 입력.(일자:24/06/22)
                 currentImageUri = selectedImageUri;
             } else if (requestCode == REQUEST_IMAGE_CAPTURE) {
                 Bitmap imageBitmap = null;

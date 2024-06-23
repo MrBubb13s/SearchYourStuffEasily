@@ -211,7 +211,7 @@ public class FurnitureActivity extends AppCompatActivity {
         nameInput.getText().clear();
         positionInput.getText().clear();
         countInput.getText().clear();
-        imageViewFurniture.setImageResource(0);
+        imageViewFurniture.setImageResource(R.drawable.add_image_512);
         currentImageUri = null;
 
         Btn_Register.setOnClickListener(new View.OnClickListener() {
@@ -341,12 +341,12 @@ public class FurnitureActivity extends AppCompatActivity {
         EditText nameInput = dialog02.findViewById(R.id.nameInput2);
         EditText positionInput = dialog02.findViewById(R.id.infoInput2);
         EditText countInput = dialog02.findViewById(R.id.countInput2);
+        currentImageUri = null;
 
         nameInput.setText(product.getName());
         positionInput.setText(product.getLocationInfo());
         countInput.setText(String.valueOf(product.getCount()));
         String itemId = product.getId();
-        Uri compareUri = currentImageUri;
 
         //FoodActivity의 사진 가져오기 로직과 통일
         StorageReference imageRef = storageRef.child("productImages/" + itemId);
@@ -354,13 +354,11 @@ public class FurnitureActivity extends AppCompatActivity {
             @Override
             public void onSuccess(Uri uri) {
                 String imageUrl = uri.toString();
-                currentImageUri = uri;
                 Glide.with(FurnitureActivity.this).load(imageUrl).into(imageViewFurniture);
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                currentImageUri = null;
                 imageViewFurniture.setImageResource(R.drawable.add_image_512); // 디폴트 이미지 설정
             }
         });
@@ -382,8 +380,8 @@ public class FurnitureActivity extends AppCompatActivity {
                 itemMap.put("count", changedCount);
                 itemMap.put("info", changedInfo);
 
-                if(currentImageUri != null && currentImageUri != compareUri)
-                    uploadProductImage(currentImageUri, itemId);
+                if(currentImageUri != null)     //currentImageUri는 이미지 업로드나 카메라 버튼으로 이미지를 새로 등록한 경우에만 값을 갖게끔 수정함.(일자:24/06/23)
+                    uploadProductImage(currentImageUri, itemId);        //이미지가 변경된 경우 해당 이미지를 itemId 명칭으로 storage에 재등록
 
                 itemsRef.child(itemId).updateChildren(itemMap)
                         .addOnSuccessListener(new OnSuccessListener<Void>() {
