@@ -309,11 +309,11 @@ public class FurnitureActivity extends AppCompatActivity {
         Btn_Delete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                itemsRef.removeValue()
+                furnitureRef.removeValue()
                         .addOnSuccessListener(new OnSuccessListener<Void>() {
                             @Override
                             public void onSuccess(Void aVoid) {
-                                Toast.makeText(FurnitureActivity.this, "가구가 삭제되었습니다.", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(FurnitureActivity.this, "가구 정보가 삭제되었습니다.", Toast.LENGTH_SHORT).show();
                                 finish();
                             }
                         })
@@ -321,6 +321,20 @@ public class FurnitureActivity extends AppCompatActivity {
                             @Override
                             public void onFailure(@NonNull Exception e) {
                                 Toast.makeText(FurnitureActivity.this, "가구 삭제에 실패했습니다.", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                itemsRef.removeValue()
+                        .addOnSuccessListener(new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void aVoid) {
+                                Toast.makeText(FurnitureActivity.this, "가구내 물건 정보가 삭제되었습니다.", Toast.LENGTH_SHORT).show();
+                                finish();
+                            }
+                        })
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Toast.makeText(FurnitureActivity.this, "삭제에 실패했습니다.", Toast.LENGTH_SHORT).show();
                             }
                         });
                 dialog01.dismiss();
